@@ -27,4 +27,18 @@ commits indicados.
 
 ## Sonidos
 
-Ninguno todavía (fase 4): los efectos se sintetizan en el navegador.
+Procesados con `npm run audio` (`scripts/build-audio.mjs`, convierte a MP3 con ffmpeg). Los
+whooshes, tonos y el tambor de guerra se sintetizan en el navegador (originales).
+
+| Asset                     | Uso                                       | Autor       | Origen                                                                   | Licencia |
+| ------------------------- | ----------------------------------------- | ----------- | ------------------------------------------------------------------------ | -------- |
+| Impact Sounds             | Golpes, huesos, metal, piso, hielo, pasos | Kenney      | [kenney.nl](https://kenney.nl/assets/impact-sounds)                      | CC0 1.0  |
+| RPG Audio                 | Tela (rodada)                             | Kenney      | [kenney.nl](https://kenney.nl/assets/rpg-audio)                          | CC0 1.0  |
+| 80 CC0 creature SFX       | Gruñidos y quejidos de los draugr         | rubberduck  | [OpenGameArt](https://opengameart.org/content/80-cc0-creature-sfx)       | CC0 1.0  |
+| Loopable Dungeon Ambience | Ambiente de la arena                      | JaggedStone | [OpenGameArt](https://opengameart.org/content/loopable-dungeon-ambience) | CC0 1.0  |
+
+## Bibliotecas de post-procesado
+
+| Biblioteca              | Licencia |
+| ----------------------- | -------- |
+| postprocessing (pmndrs) | Zlib     |

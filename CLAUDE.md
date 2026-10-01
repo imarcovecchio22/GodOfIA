@@ -9,7 +9,8 @@ daño, velocidades, hit-stop y shake se portan tal cual salvo que Nacho apruebe 
 - Una fase por vez y solo con aprobación de Nacho. Una rama por fase, commits chicos con mensajes
   convencionales (`feat:`, `fix:`, `chore:`, `test:`, `docs:`, `refactor:`), PR a `main` para que
   Vercel genere el preview.
-- Antes de cada commit: `npm run check` en verde (lint + test + build).
+- Antes de cada commit: `npm run check` en verde (lint + test + build). Ojo con encadenar
+  `npm run check | grep ...`: el pipe esconde el código de salida; chequear `$?` del check.
 - Nada de `TODO` en el código sin una entrada en `ROADMAP.md` o un issue.
 - Si algo del brief choca con una buena práctica, avisar y proponer una alternativa.
 - Comunicación con Nacho en español rioplatense.
@@ -42,7 +43,6 @@ daño, velocidades, hit-stop y shake se portan tal cual salvo que Nacho apruebe 
 - Las vistas (`render/`, `fx/`, `ui/`, `audio/`) leen el estado o escuchan eventos; nunca modifican
   la simulación.
 - Entidades con `prevPos`/`prevFacing` (snapshot al inicio de cada paso) para interpolar el render.
-- `render/colorSetup.ts` tiene que ser el primer import de `main.ts`.
 - Física (fase 2): `physics/PhysicsWorld` arma el escenario estático de Rapier y nunca simula
   cuerpos; se usa para el character controller y consultas. Grupos en `physics/groups.ts`: `WALL`
   (borde invisible, solo personajes), `SOLID` (columnas y antorchas: personajes, cámara, hacha),
@@ -56,7 +56,14 @@ daño, velocidades, hit-stop y shake se portan tal cual salvo que Nacho apruebe 
   (`data/models.ts`, medido con `scripts/analyze-clips.mjs`) cae en el impacto de la tabla. Nunca
   ajustar timings de gameplay para que encaje una animación: se ajusta el `contact`.
 - Three saca los puntos de los nombres de nodo: `handslot.r` se busca como `handslotr`.
-- Texturas de los GLB con `NoColorSpace` mientras el pipeline sea lineal (`render/characters.ts`).
+- Imagen (fase 4): pipeline sRGB con post-procesado (`render/PostFX.ts`: bloom, AgX, color,
+  viñeta). Luces calibradas a ojo en `data/arena.ts`; lo emisivo usa colores HDR (`GLOW` en
+  `data/graphics.ts`) para que lo agarre el bloom. `renderer.info` se reinicia a mano por frame.
+- Audio (fase 4): `npm run audio` genera `src/assets/audio/*.mp3` (requiere ffmpeg). Se cargan en
+  diferido con el primer click; hasta entonces suena el sintetizado. Mezcla y bancos en
+  `data/audio.ts`; los eventos se traducen en `audio/AudioDirector.ts`.
+- Ajustes del jugador en `ui/settings.ts` (localStorage `furia-settings`); ayudas de una sola vez en
+  `ui/Tips.ts` (`furia-tips`).
 - Con `?debug`, `window.__furia` expone el juego (para la consola y las pruebas en navegador).
 - Los tests inicializan Rapier en `src/test/setup.ts`; `makeWorld()` arma un `PhysicsWorld` real.
 - Tests de timing: los valores de la tabla se verifican en ticks a 60 Hz.

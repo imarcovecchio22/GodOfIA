@@ -8,24 +8,24 @@ Plan por fases completo en `BRIEF.md`. Acá van las notas pendientes y la deuda 
 - [x] Fase 1: paridad con el prototipo (pendiente de la prueba lado a lado de Nacho)
 - [x] Fase 2: física y cámara
 - [x] Fase 3: modelos y animación
-- [ ] Fase 4: pulido
+- [x] Fase 4: pulido
 - [ ] Fase 5: el Jarl Ahogado
 - [ ] Fase 6: arquero draugr y gamepad
 
 ## Pendientes y deuda
 
-- **Pipeline de color (fase 4).** Para igualar el look de r128 la gestión de color está apagada y
-  la salida es lineal (`render/colorSetup.ts`), y las intensidades de luz están convertidas a mano
-  (`data/arena.ts`). Al sumar postprocessing conviene pasar a sRGB + tone mapping y recalibrar.
 - **Mano del jugador.** El hacha sale y vuelve a `PlayerSim.handPos`, que la vista toma del hueso
   `handslot.r` en cada frame.
 - **Look del protagonista.** Por ahora, gorro de oso (decisión de Nacho). Si en la fase 4 se busca un
   tono más serio, probar un casco o capucha CC0 (por ejemplo, de Quaternius) colgado del hueso de la
   cabeza con el mismo pipeline.
-- **Pose de llamado del hacha.** El prototipo levantaba el brazo al llamarla; con los modelos no hay
-  pose especial (haría falta una capa solo para el brazo). Candidato a la fase 4.
 - **Piernas cortas.** Los personajes de KayKit son chibi: los ciclos de caminar y correr van
   acelerados con tope (`data/models.ts`) y los pies patinan un poco a velocidad máxima.
+- **Presupuesto medido (fase 4, con post-procesado).** 15 enemigos: 107 draw calls (incluye las
+  pasadas del bloom) y ~130 mil triángulos. Bundle inicial 252 KB gzip; hasta el menú se descargan
+  ~2,6 MB comprimidos. Falta medir FPS en una notebook con GPU integrada real (swiftshader no sirve).
+- **Música.** No hay pista CC0 de combate que encaje: suenan una ambientación CC0 y un tambor de
+  guerra procedural durante las oleadas. Si aparece una pista, va al bus de música.
 - **Presupuesto medido (fase 3).** Con 15 enemigos en pantalla: 83 draw calls (sombras incluidas) y
   ~140 mil triángulos. Modelos: ~600 KB en total.
 - **Tiempos con el timer descontado por paso** (muerte, congelamiento, invulnerabilidad) pueden caer
