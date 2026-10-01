@@ -1,5 +1,3 @@
-import type { EventBus } from '../core/EventBus';
-import type { GameEvents } from '../game/events';
 import type { AudioManager } from './AudioManager';
 
 /** Sonidos sintetizados del prototipo, con los mismos parámetros. */
@@ -50,23 +48,4 @@ export function createSynthBank(a: AudioManager) {
     },
     dodge: () => a.noise(0.22, 300, 1.5, 0.18, 'bandpass', 900),
   };
-}
-
-/** Conecta los eventos de la simulación con los sonidos. */
-export function bindAudio(events: EventBus<GameEvents>, audio: AudioManager): void {
-  const s = createSynthBank(audio);
-  events.on('player:swing', () => s.whoosh());
-  events.on('player:slam', () => s.slam());
-  events.on('player:hit-landed', ({ heavy }) => s.hit(heavy));
-  events.on('player:hurt', () => s.hurt());
-  events.on('player:dodge', () => s.dodge());
-  events.on('player:healed', () => s.heal());
-  events.on('enemy:killed', () => s.die());
-  events.on('enemy:frozen', () => s.freeze());
-  events.on('axe:thrown', () => s.throwAxe());
-  events.on('axe:hit', () => s.hit(false));
-  events.on('axe:embedded', () => s.clink());
-  events.on('axe:recalled', () => s.recall());
-  events.on('axe:caught', () => s.catchAxe());
-  events.on('wave:start', () => s.wave());
 }

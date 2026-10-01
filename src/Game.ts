@@ -1,6 +1,7 @@
 import { Scene } from 'three';
 import { AudioManager } from './audio/AudioManager';
-import { bindAudio } from './audio/synthBank';
+import { AudioDirector } from './audio/AudioDirector';
+import { AUDIO_URLS } from './assets';
 import { Input } from './core/Input';
 import { Loop } from './core/Loop';
 import { Time } from './core/Time';
@@ -61,6 +62,8 @@ export class Game {
   private readonly orbViews: OrbViews;
   private readonly fx: FxDirector;
   private readonly hud: Hud;
+  private readonly audioDirector: AudioDirector;
+  private audioLoading = false;
 
   private mode: Mode = 'menu';
   private locked = false;
@@ -92,7 +95,13 @@ export class Game {
     this.orbViews = new OrbViews(this.scene);
     this.fx = new FxDirector(this.scene, this.world);
     this.hud = new Hud(this.world);
-    bindAudio(this.world.events, this.audio);
+    const rig = this.cameraRig;
+    this.audioDirector = new AudioDirector(this.audio, this.world, {
+      position: rig.camera.position,
+      get yaw() {
+        return rig.yaw;
+      },
+    });
 
     this.world.events.on('enemy:spawned', ({ enemy }) => {
       this.enemyViews.acquire(enemy);
@@ -165,6 +174,7 @@ export class Game {
     this.cameraRig.update(realDt, this.playerView.root.position);
     this.cameraRig.writeAim(w.aimOrigin, w.aimDir);
     this.hud.update(realDt);
+    this.audioDirector.update();
     w.stats.tickRealTime(realDt);
 
     this.renderer.render(realDt);
@@ -177,6 +187,7 @@ export class Game {
     saveSettings(s);
     this.cameraRig.sensitivity = s.sensitivity;
     this.cameraRig.invertY = s.invertY;
+    this.audio.setVolumes(s);
     this.renderer.setQuality(s.quality);
     this.arena.setShadowMapSize(QUALITY[s.quality].shadowMapSize);
   }
@@ -263,8 +274,18 @@ export class Game {
     });
   }
 
-  private requestLock(): void {
+  /** El audio necesita un gesto del usuario: se inicia (y se descarga) con el primer click. */
+  private startAudio(): void {
     this.audio.init();
+    if (this.audioLoading) return;
+    this.audioLoading = true;
+    void this.audio.loadSamples(AUDIO_URLS).then(() => {
+      this.audio.startAmbient();
+    });
+  }
+
+  private requestLock(): void {
+    this.startAudio();
     const canvas = this.renderer.canvas;
     if (this.fallback) {
       this.enterPlay();

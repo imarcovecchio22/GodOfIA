@@ -22,6 +22,9 @@ const STATES: StateTable<EnemyState, EnemySim> = {
   },
   chase: { update: (e, dt) => e.updateChase(dt) },
   windup: {
+    enter: (e) => {
+      e.world.events.emit('enemy:windup', { enemy: e });
+    },
     update: (e, dt) => {
       e.facing = lerpAngle(e.facing, e.wantFacing, damp(ENEMY.windupTurnDamp, dt));
       return e.fsm.t >= e.arch.windup ? 'attack' : undefined;

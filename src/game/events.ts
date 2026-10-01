@@ -17,6 +17,8 @@ export interface GameEvents {
   'player:dodge': Point;
   'player:healed': Point;
   'enemy:spawned': { enemy: EnemySim };
+  /** Empieza a cargar un ataque (aviso: ojos rojos y gruñido). */
+  'enemy:windup': { enemy: EnemySim };
   'enemy:removed': { enemy: EnemySim };
   'enemy:hit': Point & { enemy: EnemySim };
   'enemy:killed': { enemy: EnemySim };
