@@ -1,0 +1,7 @@
+* text=auto eol=lf
+*.wasm binary
+*.glb binary
+*.ktx2 binary
+*.png binary
+*.ogg binary
+*.mp3 binary
