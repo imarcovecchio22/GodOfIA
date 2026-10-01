@@ -27,7 +27,7 @@ import {
   TorusGeometry,
   type Scene,
 } from 'three';
-import { ARENA, LIGHTING, pillarPositions, torchPositions } from '../data/arena';
+import { ARENA, LIGHTING, pillarPositions, rockLayout, torchPositions } from '../data/arena';
 import { box, cyl, mat } from '../render/primitives';
 
 const rand = (a: number, b: number): number => a + Math.random() * (b - a);
@@ -152,23 +152,21 @@ export class ArenaView {
     }
     scene.add(marks);
 
-    // Rocas del borde (una draw call).
+    // Rocas del borde (una draw call). Mismo layout que sus colliders de cámara.
+    const layout = rockLayout();
     const rocks = new InstancedMesh(
       new DodecahedronGeometry(1, 0),
       mat(0x4a4d52, { roughness: 1, flatShading: true }),
-      46,
+      layout.length,
     );
     rocks.castShadow = rocks.receiveShadow = true;
-    for (let i = 0; i < 46; i++) {
-      const a = (i / 46) * Math.PI * 2 + rand(-0.05, 0.05);
-      const r = R + rand(0.6, 3.2);
-      const s = rand(0.8, 2.4);
-      dummy.position.set(Math.sin(a) * r, s * 0.35, Math.cos(a) * r);
-      dummy.rotation.set(rand(0, 3), rand(0, 3), rand(0, 3));
-      dummy.scale.setScalar(s);
+    layout.forEach((rock, i) => {
+      dummy.position.set(rock.x, rock.y, rock.z);
+      dummy.rotation.set(rock.rx, rock.ry, rock.rz);
+      dummy.scale.setScalar(rock.size);
       dummy.updateMatrix();
       rocks.setMatrixAt(i, dummy.matrix);
-    }
+    });
     scene.add(rocks);
 
     // Bosque (una draw call). Cono unitario escalado por instancia.
@@ -190,12 +188,14 @@ export class ArenaView {
     // Columnas.
     const pillarM = mat(0x55595f, { roughness: 0.95 });
     const glowM = new MeshBasicMaterial({ color: 0x5fd4e6 });
+    const ph = ARENA.pillarHeight;
     for (const p of pillarPositions()) {
-      const col = cyl(0.8, 0.95, 4.6, pillarM, 9);
-      col.position.set(p.x, 2.3, p.z);
+      const col = cyl(0.8, 0.95, ph, pillarM, 9);
+      col.position.set(p.x, ph / 2, p.z);
       scene.add(col);
-      const cap = box(2.1, 0.4, 2.1, pillarM);
-      cap.position.set(p.x, 4.75, p.z);
+      const cs = ARENA.pillarCapSize;
+      const cap = box(cs, ARENA.pillarCapHeight, cs, pillarM);
+      cap.position.set(p.x, ph + ARENA.pillarCapHeight / 2, p.z);
       scene.add(cap);
       const ring = new Mesh(new TorusGeometry(0.84, 0.045, 6, 28), glowM);
       ring.rotation.x = Math.PI / 2;
