@@ -4,6 +4,7 @@ import { AXE } from '../data/axe';
 import { CAMERA } from '../data/camera';
 import { BRUTE, DRAUGR, ENEMY } from '../data/enemies';
 import { ANIMATION, ENEMY_MODELS, PLAYER_MODEL } from '../data/models';
+import { POSTFX } from '../data/graphics';
 import { PLAYER } from '../data/player';
 import { COMBO, ORBS, WAVES } from '../data/waves';
 
@@ -24,7 +25,7 @@ function addAll(folder: GUI, obj: object): void {
  * Panel de tuning (solo desarrollo). Edita en vivo los objetos de `src/data/`: los cambios se
  * aplican al próximo uso del valor (por ejemplo, la vida de un enemigo, al próximo spawn).
  */
-export function createTuningPanel(): GUI {
+export function createTuningPanel(onPostFx: () => void): GUI {
   const gui = new GUI({ title: 'Tuning' });
   gui.close();
   addAll(gui.addFolder('Jugador').close(), PLAYER);
@@ -41,6 +42,9 @@ export function createTuningPanel(): GUI {
   addAll(gui.addFolder('Orbes').close(), ORBS);
   addAll(gui.addFolder('Combo').close(), COMBO);
   addAll(gui.addFolder('Cámara').close(), CAMERA);
+  const post = gui.addFolder('Post-procesado').close();
+  addAll(post, POSTFX);
+  post.onChange(onPostFx);
   const anim = gui.addFolder('Animación').close();
   addAll(anim.addFolder('Jugador').close(), PLAYER_MODEL);
   addAll(anim.addFolder('Draugr').close(), ENEMY_MODELS.draugr);

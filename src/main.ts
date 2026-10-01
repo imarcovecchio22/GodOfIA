@@ -1,5 +1,3 @@
-// Primero: apaga la gestión de color antes de que cualquier módulo cree materiales.
-import './render/colorSetup';
 import '@fontsource/cinzel/600.css';
 import '@fontsource/cinzel/800.css';
 import './style.css';
@@ -59,7 +57,9 @@ if (debugEnabled()) {
 
 if (import.meta.env.DEV) {
   void import('./dev/tuningPanel').then(({ createTuningPanel }) => {
-    createTuningPanel();
+    createTuningPanel(() => {
+      game.renderer.post.syncTuning();
+    });
   });
 }
 

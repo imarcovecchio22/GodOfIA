@@ -22,6 +22,8 @@ import { Renderer } from './render/Renderer';
 import { ArenaView } from './scenes/ArenaView';
 import { Hud } from './ui/Hud';
 import { isNewBest, loadBest, saveBest, type BestRecord } from './ui/records';
+import { loadSettings, saveSettings, type Settings } from './ui/settings';
+import { QUALITY } from './data/graphics';
 
 type Mode = 'menu' | 'play' | 'paused' | 'over';
 
@@ -66,6 +68,7 @@ export class Game {
   /** Sin pointer lock (iframes, navegadores que lo bloquean): mouse libre y Esc para pausar. */
   private fallback = false;
   private best: BestRecord = loadBest();
+  settings: Settings = loadSettings();
 
   constructor(app: HTMLElement, assets: GameAssets) {
     this.physics = new PhysicsWorld(assets.rapier);
@@ -81,7 +84,7 @@ export class Game {
       },
       this.physics,
     );
-    this.renderer = new Renderer(app, this.cameraRig.camera);
+    this.renderer = new Renderer(app, this.scene, this.cameraRig.camera, this.settings.quality);
     this.arena = new ArenaView(this.scene);
     this.playerView = new PlayerView(this.scene, assets.player);
     this.axeView = new AxeView(this.scene, this.playerView);
@@ -116,6 +119,7 @@ export class Game {
       },
     });
 
+    this.applySettings(this.settings);
     this.restart();
     this.setMode('menu');
     this.updateBestText();
@@ -163,8 +167,18 @@ export class Game {
     this.hud.update(realDt);
     w.stats.tickRealTime(realDt);
 
-    this.renderer.gl.render(this.scene, this.cameraRig.camera);
+    this.renderer.render(realDt);
     this.overlay?.update(realDt, this.renderer.gl, this.loop.lastSteps);
+  }
+
+  /** Aplica y guarda las preferencias del jugador. */
+  applySettings(s: Settings): void {
+    this.settings = s;
+    saveSettings(s);
+    this.cameraRig.sensitivity = s.sensitivity;
+    this.cameraRig.invertY = s.invertY;
+    this.renderer.setQuality(s.quality);
+    this.arena.setShadowMapSize(QUALITY[s.quality].shadowMapSize);
   }
 
   // ─────────────────────── Partida ───────────────────────

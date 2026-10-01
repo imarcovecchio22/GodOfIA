@@ -85,6 +85,8 @@ function stoneTexture(): CanvasTexture {
  */
 export class ArenaView {
   private readonly torches: Torch[] = [];
+  /** La única luz con sombras; su resolución depende de la calidad gráfica. */
+  readonly moon: DirectionalLight;
   private readonly emberGeo: BufferGeometry;
 
   constructor(scene: Scene) {
@@ -94,6 +96,7 @@ export class ArenaView {
 
     scene.add(new HemisphereLight(LIGHTING.hemiSky, LIGHTING.hemiGround, LIGHTING.hemiIntensity));
     const moon = new DirectionalLight(LIGHTING.moonColor, LIGHTING.moonIntensity);
+    this.moon = moon;
     moon.position.set(-14, 26, 10);
     moon.castShadow = true;
     moon.shadow.mapSize.set(2048, 2048);
@@ -256,6 +259,14 @@ export class ArenaView {
         }),
       ),
     );
+  }
+
+  /** Resolución del mapa de sombras (según la calidad gráfica). */
+  setShadowMapSize(size: number): void {
+    if (this.moon.shadow.mapSize.x === size) return;
+    this.moon.shadow.mapSize.set(size, size);
+    this.moon.shadow.map?.dispose();
+    this.moon.shadow.map = null;
   }
 
   /** Brasas y antorchas: corren en tiempo real, también durante el hit-stop. */

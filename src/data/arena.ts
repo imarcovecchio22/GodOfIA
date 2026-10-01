@@ -101,11 +101,9 @@ export function torchPositions(): CircleObstacle[] {
 }
 
 /**
- * Iluminación. El prototipo usaba Three r128 con luces "legacy", que multiplicaban la irradiancia
- * por π y tenían otra caída de distancia. Los valores de acá están convertidos para que se vea
- * igual con las luces físicas actuales:
- * - Hemisférica y direccional: intensidad del prototipo × π.
- * - Puntuales: decay 1 e intensidad calibrada para igualar la caída legacy entre 3 y 12 u.
+ * Iluminación (fase 4: pipeline sRGB con tone mapping AgX). Calibrada a ojo para mantener la noche
+ * del prototipo: ambiente y luna bajos, y las antorchas como fuente cálida principal. Las puntuales
+ * usan decay 1 con intensidades físicas.
  */
 export interface LightingTuning {
   fogColor: number;
@@ -127,27 +125,21 @@ export interface LightingTuning {
   axeLightGroundPulse: number;
 }
 
-const LEGACY_PI = Math.PI;
-/** Conversión de intensidad puntual legacy (decay 1,5, dist 16) a física con decay 1. */
-const TORCH_LEGACY_TO_PHYSICAL = 9.1;
-/** Idem para la luz del hacha (decay 1,6, dist 7). */
-const AXE_LEGACY_TO_PHYSICAL = 4;
-
 export const LIGHTING: LightingTuning = {
   fogColor: 0x18202c,
   fogDensity: 0.028,
   hemiSky: 0x9fb2d6,
   hemiGround: 0x2a1f18,
-  hemiIntensity: 0.55 * LEGACY_PI,
+  hemiIntensity: 0.6,
   moonColor: 0xc4d4ff,
-  moonIntensity: 0.75 * LEGACY_PI,
+  moonIntensity: 1.3,
   torchColor: 0xff8a3a,
   torchDistance: 16,
-  torchIntensity: 1.5 * TORCH_LEGACY_TO_PHYSICAL,
-  torchFlicker: TORCH_LEGACY_TO_PHYSICAL,
+  torchIntensity: 13.6,
+  torchFlicker: 9.1,
   axeLightColor: 0x7fe0ff,
   axeLightDistance: 7,
-  axeLightFlying: 1.4 * AXE_LEGACY_TO_PHYSICAL,
-  axeLightGround: 1.1 * AXE_LEGACY_TO_PHYSICAL,
-  axeLightGroundPulse: 0.4 * AXE_LEGACY_TO_PHYSICAL,
+  axeLightFlying: 5.6,
+  axeLightGround: 4.4,
+  axeLightGroundPulse: 1.6,
 };

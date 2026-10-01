@@ -1,7 +1,6 @@
 import {
   Mesh,
   MeshBasicMaterial,
-  NoColorSpace,
   SkinnedMesh,
   type AnimationClip,
   type MeshStandardMaterial,
@@ -26,18 +25,11 @@ function meshesOf(root: Object3D): Mesh[] {
 
 /**
  * Ajustes comunes a todos los personajes:
- * - Texturas sin conversión de color: el pipeline actual es lineal (ver `render/colorSetup.ts`) y
- *   decodificar sRGB las oscurecería.
  * - Sombras: proyectan y reciben (los ojos no proyectan).
  * - Sin frustum culling: con skinning la caja del bind pose no sigue a la animación.
  */
 export function prepareTemplate(gltf: GLTF): CharacterTemplate {
   for (const o of meshesOf(gltf.scene)) {
-    const mat = o.material as MeshStandardMaterial;
-    if (mat.map) {
-      mat.map.colorSpace = NoColorSpace;
-      mat.map.needsUpdate = true;
-    }
     o.castShadow = true;
     o.receiveShadow = true;
     o.frustumCulled = false;

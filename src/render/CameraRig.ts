@@ -26,6 +26,9 @@ export class CameraRig {
   pitch = CAMERA.pitchInitial;
   trauma = 0;
   obstacles: CameraObstacles | null = null;
+  /** Preferencias del jugador (ajustes). */
+  sensitivity = 1;
+  invertY: boolean = CAMERA.invertY;
   private readonly target = new Vector3();
   /** Distancia actual al punto de mira, acortada por la colisión. */
   private distance: number = CAMERA.distance;
@@ -44,10 +47,10 @@ export class CameraRig {
 
   /** Mirada con el mouse, en píxeles de movimiento. */
   look(dx: number, dy: number): void {
-    this.yaw -= dx * CAMERA.yawSensitivity;
-    const sign = CAMERA.invertY ? -1 : 1;
+    this.yaw -= dx * CAMERA.yawSensitivity * this.sensitivity;
+    const sign = this.invertY ? -1 : 1;
     this.pitch = clamp(
-      this.pitch + dy * CAMERA.pitchSensitivity * sign,
+      this.pitch + dy * CAMERA.pitchSensitivity * this.sensitivity * sign,
       CAMERA.pitchMin,
       CAMERA.pitchMax,
     );
