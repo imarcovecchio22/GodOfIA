@@ -24,6 +24,9 @@ import { ArenaView } from './scenes/ArenaView';
 import { Hud } from './ui/Hud';
 import { isNewBest, loadBest, saveBest, type BestRecord } from './ui/records';
 import { loadSettings, saveSettings, type Settings } from './ui/settings';
+import { SettingsScreen } from './ui/SettingsScreen';
+import { Tips } from './ui/Tips';
+import { renderControls } from './ui/controls';
 import { QUALITY } from './data/graphics';
 
 type Mode = 'menu' | 'play' | 'paused' | 'over';
@@ -63,6 +66,8 @@ export class Game {
   private readonly fx: FxDirector;
   private readonly hud: Hud;
   private readonly audioDirector: AudioDirector;
+  private readonly tips: Tips;
+  private readonly settingsScreen: SettingsScreen;
   private audioLoading = false;
 
   private mode: Mode = 'menu';
@@ -114,6 +119,14 @@ export class Game {
     this.input.onKeyDown = (code) => {
       this.onKey(code);
     };
+    this.tips = new Tips(this.world);
+    this.settingsScreen = new SettingsScreen(
+      () => this.settings,
+      (s) => {
+        this.applySettings(s);
+      },
+    );
+    renderControls(document);
     this.bindScreens();
 
     this.loop = new Loop(this.time, {
@@ -174,6 +187,7 @@ export class Game {
     this.cameraRig.update(realDt, this.playerView.root.position);
     this.cameraRig.writeAim(w.aimOrigin, w.aimDir);
     this.hud.update(realDt);
+    this.tips.update(realDt);
     this.audioDirector.update();
     w.stats.tickRealTime(realDt);
 
@@ -210,24 +224,34 @@ export class Game {
     this.time.paused = mode === 'menu' || mode === 'paused';
     this.input.enabled = mode === 'play';
     if (mode !== 'play') this.input.clearPressed();
-    this.show('menu', mode === 'menu');
-    this.show('pause', mode === 'paused');
-    this.show('over', mode === 'over');
+    if (this.settingsScreen.isOpen) this.settingsScreen.close();
+    this.showScreens();
+  }
+
+  private showScreens(): void {
+    this.show('menu', this.mode === 'menu');
+    this.show('pause', this.mode === 'paused');
+    this.show('over', this.mode === 'over');
   }
 
   private enterPlay(): void {
-    if (this.mode === 'menu' || this.mode === 'over') this.restart();
+    const fresh = this.mode === 'menu' || this.mode === 'over';
+    if (fresh) this.restart();
     this.setMode('play');
+    if (fresh) this.tips.start();
   }
 
   private gameOver(): void {
     const w = this.world;
     const run = { wave: w.waves.wave, kills: w.stats.kills };
-    if (isNewBest(this.best, run)) {
+    const record = isNewBest(this.best, run);
+    if (record) {
       this.best = run;
       saveBest(run);
     }
+    this.tips.stop();
     this.setMode('over');
+    this.show('newBest', record);
     el('oWave').textContent = String(run.wave);
     el('oKills').textContent = String(run.kills);
     el('oCombo').textContent = String(w.stats.bestCombo);
@@ -250,9 +274,15 @@ export class Game {
   }
 
   private bindScreens(): void {
-    const start = el('startBtn') as HTMLButtonElement;
-    start.textContent = 'Entrar a la arena';
-    start.disabled = false;
+    for (const btn of document.querySelectorAll('[data-open-settings]')) {
+      btn.addEventListener('click', () => {
+        this.show('menu', false);
+        this.show('pause', false);
+        this.settingsScreen.open(() => {
+          this.showScreens();
+        });
+      });
+    }
     for (const id of ['startBtn', 'resumeBtn', 'againBtn']) {
       el(id).addEventListener('click', () => {
         this.requestLock();
@@ -322,6 +352,11 @@ export class Game {
   private onKey(code: string): void {
     if (code === 'KeyM') {
       this.audio.toggleMute();
+      this.tips.toast(this.audio.muted ? 'Sonido apagado (<kbd>M</kbd>)' : 'Sonido encendido');
+      return;
+    }
+    if (code === 'Escape' && this.settingsScreen.isOpen) {
+      this.settingsScreen.close();
       return;
     }
     if (code === 'Escape' && this.fallback) {

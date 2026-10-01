@@ -15,11 +15,15 @@ if (!app) throw new Error('Falta #app en index.html');
 
 if (needsDeviceNotice()) showDeviceNotice(app);
 
-// El menú (HTML estático) ya se ve; el botón de entrar muestra el progreso real de la carga y se
-// habilita cuando todo está listo.
-const startBtn = document.getElementById('startBtn');
+// Pantalla de carga con progreso real (física + modelos). El audio se baja después, en diferido.
+const loading = document.getElementById('loading');
+const loadingFill = document.getElementById('loadingFill');
+const loadingTxt = document.getElementById('loadingTxt');
 const loader = new AssetLoader((f) => {
-  if (startBtn) startBtn.textContent = `Cargando… ${Math.round(f * 100)}%`;
+  const pct = Math.round(f * 100);
+  if (loadingFill) loadingFill.style.transform = `scaleX(${f.toFixed(3)})`;
+  if (loadingTxt) loadingTxt.textContent = `${pct}%`;
+  loading?.setAttribute('aria-valuenow', String(pct));
 });
 let assets;
 try {
@@ -35,7 +39,7 @@ try {
     enemies: { draugr: prepareTemplate(draugr), brute: prepareTemplate(brute) },
   };
 } catch (err: unknown) {
-  if (startBtn) startBtn.textContent = 'No se pudo cargar el juego. Recargá la página.';
+  if (loadingTxt) loadingTxt.textContent = 'No se pudo cargar el juego. Recargá la página.';
   throw err;
 }
 
@@ -64,3 +68,4 @@ if (import.meta.env.DEV) {
 }
 
 game.start();
+loading?.classList.add('fade-out');

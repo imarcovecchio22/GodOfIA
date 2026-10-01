@@ -30,23 +30,30 @@
         </div>
         <div id="cross"></div>
         <div id="banner" class="display"></div>
-        <div class="hint">Esc pausa, M silencia</div>
+        <div id="tip" role="status" aria-live="polite"></div>
+        <div class="hint">Esc pausa · M silencia</div>
       </div>
 
-      <div id="menu" class="overlay">
+      <div id="loading" class="overlay">
+        <div class="card">
+          <h1 class="display">Furia del Norte</h1>
+          <div class="sub">Despertando a los muertos…</div>
+          <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+            <div id="loadingFill"></div>
+          </div>
+          <div class="small" id="loadingTxt">0%</div>
+        </div>
+      </div>
+
+      <div id="menu" class="overlay hidden">
         <div class="card">
           <h1 class="display">Furia del Norte</h1>
           <div class="sub">Un hack and slash falopa que corre en el navegador</div>
-          <div class="keys">
-            <kbd>WASD</kbd><span>moverse, con Shift corrés</span> <kbd>Mouse</kbd
-            ><span>cámara y puntería</span> <kbd>Click izquierdo</kbd
-            ><span>combo de tres hachazos</span> <kbd>Click derecho</kbd
-            ><span>golpe pesado contra el piso</span> <kbd>Q</kbd
-            ><span>tirar el hacha, congela al que toca</span> <kbd>Q o E</kbd
-            ><span>llamar al hacha de vuelta</span> <kbd>Espacio</kbd
-            ><span>rodar, sos invulnerable mientras rodás</span>
+          <div class="keys" data-controls></div>
+          <div class="buttons">
+            <button class="btn" id="startBtn" type="button">Entrar a la arena</button>
+            <button class="btn ghost" data-open-settings type="button">Ajustes</button>
           </div>
-          <button class="btn" id="startBtn" type="button" disabled>Cargando…</button>
           <div class="small">
             Pide mouse y teclado. Tu récord: <span id="bestTxt">ninguno todavía</span>
           </div>
@@ -57,7 +64,11 @@
         <div class="card">
           <h1 class="display small-title">Pausa</h1>
           <div class="sub">Los draugr te esperan</div>
-          <button class="btn" id="resumeBtn" type="button">Seguir peleando</button>
+          <div class="keys" data-controls></div>
+          <div class="buttons">
+            <button class="btn" id="resumeBtn" type="button">Seguir peleando</button>
+            <button class="btn ghost" data-open-settings type="button">Ajustes</button>
+          </div>
           <div class="small" id="pauseMsg"></div>
         </div>
       </div>
@@ -71,8 +82,43 @@
             <div><b id="oKills">0</b><span>bajas</span></div>
             <div><b id="oCombo">0</b><span>mejor combo</span></div>
           </div>
+          <div id="newBest" class="new-best hidden">¡Nuevo récord!</div>
           <button class="btn" id="againBtn" type="button">Revancha</button>
           <div class="small" id="oBest"></div>
+        </div>
+      </div>
+
+      <div id="settings" class="overlay hidden" role="dialog" aria-labelledby="settingsTitle">
+        <div class="card settings-card">
+          <h1 class="display small-title" id="settingsTitle">Ajustes</h1>
+          <form class="settings" id="settingsForm">
+            <label for="setSensitivity">Sensibilidad del mouse</label>
+            <input
+              id="setSensitivity"
+              name="sensitivity"
+              type="range"
+              min="0.2"
+              max="3"
+              step="0.05"
+            />
+            <label for="setInvertY">Invertir eje Y</label>
+            <input id="setInvertY" name="invertY" type="checkbox" />
+            <label for="setMaster">Volumen general</label>
+            <input id="setMaster" name="master" type="range" min="0" max="1" step="0.01" />
+            <label for="setMusic">Música y ambiente</label>
+            <input id="setMusic" name="music" type="range" min="0" max="1" step="0.01" />
+            <label for="setSfx">Efectos</label>
+            <input id="setSfx" name="sfx" type="range" min="0" max="1" step="0.01" />
+            <label for="setQuality">Calidad gráfica</label>
+            <select id="setQuality" name="quality">
+              <option value="low">Baja</option>
+              <option value="medium">Media</option>
+              <option value="high">Alta</option>
+            </select>
+          </form>
+          <div class="buttons">
+            <button class="btn" id="settingsBack" type="button">Volver</button>
+          </div>
         </div>
       </div>
     </div>
