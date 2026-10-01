@@ -4,11 +4,77 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Hack and slash nórdico en el navegador." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Furia del Norte</title>
   </head>
   <body>
     <div id="app">
-      <div class="title-tag display">Furia del Norte</div>
+      <div id="hud">
+        <div id="lowhp"></div>
+        <div id="vig"></div>
+        <div class="top-left">
+          <div class="label">Vida</div>
+          <div class="hpbar">
+            <div id="hpGhost"></div>
+            <div id="hpFill"></div>
+          </div>
+          <div id="axeStatus">Hacha en mano. Q para lanzarla</div>
+        </div>
+        <div class="top-right">
+          <div id="waveTxt" class="display">Oleada 1</div>
+          <div id="killsTxt">0 bajas</div>
+        </div>
+        <div id="combo">
+          <div id="comboNum" class="display">0</div>
+          <div id="comboLbl">golpes seguidos</div>
+        </div>
+        <div id="cross"></div>
+        <div id="banner" class="display"></div>
+        <div class="hint">Esc pausa, M silencia</div>
+      </div>
+
+      <div id="menu" class="overlay">
+        <div class="card">
+          <h1 class="display">Furia del Norte</h1>
+          <div class="sub">Un hack and slash falopa que corre en el navegador</div>
+          <div class="keys">
+            <kbd>WASD</kbd><span>moverse, con Shift corrés</span> <kbd>Mouse</kbd
+            ><span>cámara y puntería</span> <kbd>Click izquierdo</kbd
+            ><span>combo de tres hachazos</span> <kbd>Click derecho</kbd
+            ><span>golpe pesado contra el piso</span> <kbd>Q</kbd
+            ><span>tirar el hacha, congela al que toca</span> <kbd>Q o E</kbd
+            ><span>llamar al hacha de vuelta</span> <kbd>Espacio</kbd
+            ><span>rodar, sos invulnerable mientras rodás</span>
+          </div>
+          <button class="btn" id="startBtn" type="button">Entrar a la arena</button>
+          <div class="small">
+            Pide mouse y teclado. Tu récord: <span id="bestTxt">ninguno todavía</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="pause" class="overlay hidden">
+        <div class="card">
+          <h1 class="display small-title">Pausa</h1>
+          <div class="sub">Los draugr te esperan</div>
+          <button class="btn" id="resumeBtn" type="button">Seguir peleando</button>
+          <div class="small" id="pauseMsg"></div>
+        </div>
+      </div>
+
+      <div id="over" class="overlay hidden">
+        <div class="card">
+          <h1 class="display over-title">Caíste</h1>
+          <div class="sub">Pero el norte no olvida</div>
+          <div class="stats">
+            <div><b id="oWave">0</b><span>oleada</span></div>
+            <div><b id="oKills">0</b><span>bajas</span></div>
+            <div><b id="oCombo">0</b><span>mejor combo</span></div>
+          </div>
+          <button class="btn" id="againBtn" type="button">Revancha</button>
+          <div class="small" id="oBest"></div>
+        </div>
+      </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

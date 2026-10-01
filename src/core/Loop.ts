@@ -1,6 +1,8 @@
 import type { Time } from './Time';
 
 export interface LoopHandlers {
+  /** Antes de simular: aplicar input que la simulación lee (por ejemplo, la mirada del mouse). */
+  preUpdate?(realDt: number): void;
   /** Un paso de simulación de duración fija `step`. */
   update(step: number): void;
   /** Un frame de render. `alpha` interpola entre pasos; `realDt` es para cámara, HUD y ambiente. */
@@ -38,6 +40,7 @@ export class Loop {
     this.rafId = requestAnimationFrame(this.frame);
     const realDt = this.time.beginFrame((now - this.last) / 1000);
     this.last = now;
+    this.handlers.preUpdate?.(realDt);
 
     let steps = 0;
     while (this.time.consumeStep()) {

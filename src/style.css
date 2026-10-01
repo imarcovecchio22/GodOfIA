@@ -96,20 +96,273 @@ h1 {
   outline-offset: 3px;
 }
 
-.title-tag {
-  position: fixed;
-  left: 22px;
-  bottom: 18px;
-  font-size: 20px;
+.overlay.hidden {
+  display: none;
+}
+
+.small-title {
+  font-size: 50px;
+}
+
+.over-title {
+  font-size: 58px;
+}
+
+.small {
+  font-size: 13px;
+  color: var(--ash);
+  margin-top: 18px;
+}
+
+.keys {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 9px 16px;
+  text-align: left;
+  max-width: 390px;
+  margin: 0 auto 32px;
+  font-size: 14px;
+  color: var(--ash);
+  align-items: center;
+}
+
+kbd {
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--bone);
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.04);
+  white-space: nowrap;
+  justify-self: start;
+}
+
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 36px;
+  margin: 6px 0 30px;
+}
+
+.stats b {
+  display: block;
+  font-size: 32px;
   color: var(--ember);
-  letter-spacing: 0.06em;
+  font-family: 'Cinzel', Georgia, serif;
+}
+
+.stats span {
+  font-size: 13px;
+  color: var(--ash);
+}
+
+/* HUD */
+#hud {
+  position: fixed;
+  inset: 0;
   pointer-events: none;
+}
+
+.top-left {
+  position: absolute;
+  left: 22px;
+  top: 20px;
+  width: min(340px, 60vw);
+}
+
+.label {
+  font-size: 13px;
+  color: var(--ash);
+  margin-bottom: 6px;
+}
+
+.hpbar {
+  position: relative;
+  height: 12px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+#hpGhost,
+#hpFill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  transform-origin: left center;
+}
+
+#hpGhost {
+  background: #f3e3c3;
+  opacity: 0.5;
+}
+
+#hpFill {
+  background: linear-gradient(90deg, #7d1410, #d03a22);
+}
+
+#axeStatus {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--frost);
+  text-shadow: 0 0 8px rgba(134, 230, 247, 0.4);
+}
+
+#axeStatus.out {
+  color: var(--ember);
+  text-shadow: none;
+}
+
+.top-right {
+  position: absolute;
+  right: 22px;
+  top: 14px;
+  text-align: right;
+}
+
+#waveTxt {
+  font-size: 28px;
+  color: var(--ember);
+  letter-spacing: 0.04em;
+}
+
+#killsTxt {
+  font-size: 13px;
+  color: var(--ash);
+  margin-top: 2px;
+}
+
+#combo {
+  position: absolute;
+  right: 30px;
+  top: 40%;
+  text-align: right;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+#comboNum {
+  font-size: 60px;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 0 18px rgba(224, 162, 76, 0.65);
+}
+
+#comboLbl {
+  font-size: 14px;
+  color: var(--ember);
+}
+
+#combo.pop #comboNum {
+  animation: pop 0.18s ease-out;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(1.45);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+#cross {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+}
+
+#cross.ice {
+  background: var(--frost);
+  box-shadow: 0 0 10px var(--frost);
+}
+
+#banner {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 22%;
+  text-align: center;
+  font-size: clamp(30px, 5vw, 58px);
+  color: var(--bone);
+  opacity: 0;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.85);
+}
+
+#banner.show {
+  animation: banner 2.4s ease-out forwards;
+}
+
+@keyframes banner {
+  0% {
+    opacity: 0;
+    transform: scale(1.25);
+    letter-spacing: 0.35em;
+  }
+  15% {
+    opacity: 1;
+    transform: scale(1);
+    letter-spacing: 0.08em;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+#vig {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 45%, rgba(160, 10, 5, 0.75) 100%);
+  opacity: 0;
+}
+
+#lowhp {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(120, 0, 0, 0.5) 100%);
+  opacity: 0;
+}
+
+#lowhp.on {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.hint {
+  position: absolute;
+  left: 22px;
+  bottom: 16px;
+  font-size: 12px;
+  color: var(--ash);
+  opacity: 0.85;
 }
 
 .debug-overlay {
   position: fixed;
   right: 8px;
-  top: 8px;
+  bottom: 8px;
   padding: 6px 9px;
   font:
     12px/1.45 ui-monospace,
