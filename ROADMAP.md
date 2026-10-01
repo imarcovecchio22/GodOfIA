@@ -7,23 +7,24 @@ Plan por fases completo en `BRIEF.md`. Acá van las notas pendientes y la deuda 
 - [x] Fase 0: base (scaffold, loop de paso fijo, overlay de debug, Rapier en producción, deploy)
 - [x] Fase 1: paridad con el prototipo (pendiente de la prueba lado a lado de Nacho)
 - [x] Fase 2: física y cámara
-- [ ] Fase 3: modelos y animación
+- [x] Fase 3: modelos y animación
 - [ ] Fase 4: pulido
 - [ ] Fase 5: el Jarl Ahogado
 - [ ] Fase 6: arquero draugr y gamepad
 
 ## Pendientes y deuda
 
-- **Draw calls (fase 3).** Con los modelos de primitivas, ~5 enemigos en pantalla ya dan ~165
-  draw calls contando la pasada de sombras (cada draugr son ~14 meshes con sus materiales para el
-  destello). Igual que en el prototipo. Se resuelve con los modelos de la fase 3: meshes unidos,
-  sombras solo en personajes cercanos.
 - **Pipeline de color (fase 4).** Para igualar el look de r128 la gestión de color está apagada y
   la salida es lineal (`render/colorSetup.ts`), y las intensidades de luz están convertidas a mano
   (`data/arena.ts`). Al sumar postprocessing conviene pasar a sRGB + tone mapping y recalibrar.
-- **Mano del jugador.** El hacha sale y vuelve a `PlayerSim.handPos`, que escribe la vista en cada
-  frame (como el prototipo, depende de la pose). Con los modelos de la fase 3 sale del hueso de la
-  mano.
+- **Mano del jugador.** El hacha sale y vuelve a `PlayerSim.handPos`, que la vista toma del hueso
+  `handslot.r` en cada frame.
+- **Pose de llamado del hacha.** El prototipo levantaba el brazo al llamarla; con los modelos no hay
+  pose especial (haría falta una capa solo para el brazo). Candidato a la fase 4.
+- **Piernas cortas.** Los personajes de KayKit son chibi: los ciclos de caminar y correr van
+  acelerados con tope (`data/models.ts`) y los pies patinan un poco a velocidad máxima.
+- **Presupuesto medido (fase 3).** Con 15 enemigos en pantalla: 83 draw calls (sombras incluidas) y
+  ~140 mil triángulos. Modelos: ~600 KB en total.
 - **Tiempos con el timer descontado por paso** (muerte, congelamiento, invulnerabilidad) pueden caer
   un tick más tarde por redondeo; dentro del ±1 frame aceptado.
 - **Peso de Rapier.** `@dimforge/rapier3d-compat` genera un chunk de 4,3 MB (1,67 MB gzip) porque

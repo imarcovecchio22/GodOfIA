@@ -50,6 +50,14 @@ daño, velocidades, hit-stop y shake se portan tal cual salvo que Nacho apruebe 
   después, o las consultas no los ven.
 - Cada personaje calcula su desplazamiento libremente y al final del paso lo resuelve
   `collision.moveCharacter(body, prevPos, pos)`. En enemigos, la separación va antes de resolver.
+- Modelos (fase 3): `npm run assets` genera `src/assets/models/*.glb`. Cada personaje es un solo
+  mesh con skinning (más los ojos de los esqueletos y el hacha del jugador, aparte). Los clips de
+  acción se manejan con `Animator.drive()` y `warpTime()`: el cuadro de contacto del clip
+  (`data/models.ts`, medido con `scripts/analyze-clips.mjs`) cae en el impacto de la tabla. Nunca
+  ajustar timings de gameplay para que encaje una animación: se ajusta el `contact`.
+- Three saca los puntos de los nombres de nodo: `handslot.r` se busca como `handslotr`.
+- Texturas de los GLB con `NoColorSpace` mientras el pipeline sea lineal (`render/characters.ts`).
+- Con `?debug`, `window.__furia` expone el juego (para la consola y las pruebas en navegador).
 - Los tests inicializan Rapier en `src/test/setup.ts`; `makeWorld()` arma un `PhysicsWorld` real.
 - Tests de timing: los valores de la tabla se verifican en ticks a 60 Hz.
 

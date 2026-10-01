@@ -26,6 +26,14 @@ npm run dev        # servidor de desarrollo en http://localhost:5173
 | `npm run format`  | Formatea todo con Prettier                      |
 | `npm test`        | Tests con Vitest                                |
 | `npm run check`   | lint + test + build (lo mismo que corre el CI)  |
+| `npm run assets`  | Regenera los modelos de `src/assets/models/`    |
+
+## Assets
+
+Los modelos son packs CC0 de KayKit (ver `CREDITS.md`). `npm run assets` los descarga (con caché
+en `.asset-cache/`), une cada personaje en un solo mesh, se queda con las animaciones que usa el
+juego y comprime con Meshopt. Los GLB generados se commitean, así el deploy no depende de la
+descarga. `node scripts/analyze-clips.mjs` mide el cuadro de contacto de cada golpe.
 
 ## Debug
 

@@ -10,6 +10,8 @@ import { FxDirector } from './fx/FxDirector';
 import { World } from './game/World';
 import { PhysicsWorld } from './physics/PhysicsWorld';
 import type { Rapier } from './physics/rapier';
+import type { CharacterTemplate } from './render/characters';
+import type { EnemyKind } from './data/enemies';
 import { AxeView } from './render/AxeView';
 import { CameraRig } from './render/CameraRig';
 import type { DebugOverlay } from './render/DebugOverlay';
@@ -22,6 +24,12 @@ import { Hud } from './ui/Hud';
 import { isNewBest, loadBest, saveBest, type BestRecord } from './ui/records';
 
 type Mode = 'menu' | 'play' | 'paused' | 'over';
+
+export interface GameAssets {
+  rapier: Rapier;
+  player: CharacterTemplate;
+  enemies: Record<EnemyKind, CharacterTemplate>;
+}
 
 const LOCK_FALLBACK_MS = 500;
 
@@ -59,8 +67,8 @@ export class Game {
   private fallback = false;
   private best: BestRecord = loadBest();
 
-  constructor(app: HTMLElement, rapier: Rapier) {
-    this.physics = new PhysicsWorld(rapier);
+  constructor(app: HTMLElement, assets: GameAssets) {
+    this.physics = new PhysicsWorld(assets.rapier);
     this.cameraRig.obstacles = this.physics;
     this.world = new World(
       {
@@ -75,9 +83,9 @@ export class Game {
     );
     this.renderer = new Renderer(app, this.cameraRig.camera);
     this.arena = new ArenaView(this.scene);
-    this.playerView = new PlayerView(this.scene);
+    this.playerView = new PlayerView(this.scene, assets.player);
     this.axeView = new AxeView(this.scene, this.playerView);
-    this.enemyViews = new EnemyViews(this.scene);
+    this.enemyViews = new EnemyViews(this.scene, assets.enemies);
     this.orbViews = new OrbViews(this.scene);
     this.fx = new FxDirector(this.scene, this.world);
     this.hud = new Hud(this.world);
@@ -142,10 +150,10 @@ export class Game {
     const now = this.time.realTime;
 
     // En el menú el guerrero respira aunque la simulación esté quieta.
-    this.playerView.update(w.player, w.axe, alpha, this.mode === 'menu' ? realDt : simDt, now);
+    this.playerView.update(w.player, alpha, this.mode === 'menu' ? realDt : simDt);
     this.playerView.handWorldPosition(w.player.handPos);
     this.axeView.update(w.axe, alpha, now);
-    this.enemyViews.update(alpha);
+    this.enemyViews.update(alpha, simDt, this.playerView.root.position);
     this.orbViews.update(w.orbs, simDt);
     this.fx.update(simDt);
     this.arena.update(realDt, now);
