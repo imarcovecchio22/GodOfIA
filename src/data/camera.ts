@@ -19,6 +19,12 @@ export interface CameraTuning {
   /** Desplazamiento máximo = trauma² × shakeOffset. */
   shakeOffset: number;
   shakeRoll: number;
+  /** Radio de la esfera que se usa para que la cámara no se meta en la geometría. */
+  collisionRadius: number;
+  /** Distancia mínima a la que puede acercarse la cámara al chocar. */
+  collisionMinDistance: number;
+  /** Al chocar se acerca de golpe; al liberarse vuelve suave con este factor. */
+  collisionReturnDamp: number;
 }
 
 export const CAMERA: CameraTuning = {
@@ -39,4 +45,7 @@ export const CAMERA: CameraTuning = {
   traumaDecay: 1.6,
   shakeOffset: 0.35,
   shakeRoll: 0.04,
+  collisionRadius: 0.25,
+  collisionMinDistance: 0.6,
+  collisionReturnDamp: 6,
 };

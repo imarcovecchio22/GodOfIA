@@ -17,8 +17,6 @@ export interface AxeTuning {
   flightShake: number;
   freezeDuration: number;
   freezeDurationArmored: number;
-  obstacleHitPadding: number;
-  obstacleHeight: number;
   floorHeight: number;
   floorTilt: number;
   /** Al caer suelta (enemigo muerto), la altura queda entre estos valores. */
@@ -60,8 +58,6 @@ export const AXE: AxeTuning = {
   flightShake: 0.3,
   freezeDuration: 2.8,
   freezeDurationArmored: 1.5,
-  obstacleHitPadding: 0.1,
-  obstacleHeight: 4.6,
   floorHeight: 0.15,
   floorTilt: -0.6,
   dropMinY: 0.35,
