@@ -1,4 +1,4 @@
-import { PerspectiveCamera, WebGLRenderer } from 'three';
+import { LinearSRGBColorSpace, PCFShadowMap, WebGLRenderer, type PerspectiveCamera } from 'three';
 import { ENGINE } from '../data/engine';
 
 /** Envuelve el WebGLRenderer: canvas a pantalla completa, resize y pixel ratio limitado. */
@@ -11,7 +11,10 @@ export class Renderer {
   ) {
     this.gl = new WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     this.gl.setPixelRatio(Math.min(window.devicePixelRatio, ENGINE.maxPixelRatio));
+    this.gl.outputColorSpace = LinearSRGBColorSpace;
     this.gl.shadowMap.enabled = true;
+    // PCFSoftShadowMap ya no existe en Three; PCF con radio da un resultado parecido.
+    this.gl.shadowMap.type = PCFShadowMap;
     container.prepend(this.gl.domElement);
     this.resize();
     window.addEventListener('resize', this.resize);
