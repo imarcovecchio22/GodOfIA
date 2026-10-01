@@ -2,3 +2,5 @@ dist
 reference
 package-lock.json
 BRIEF.md
+.asset-cache
+src/assets

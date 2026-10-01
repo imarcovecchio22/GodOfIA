@@ -21,8 +21,12 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.js'],
+    files: ['**/*.js', '**/*.mjs'],
     ...tseslint.configs.disableTypeChecked,
+  },
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: { globals: globals.node },
   },
   prettier,
 );
