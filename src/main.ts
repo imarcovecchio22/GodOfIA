@@ -12,21 +12,24 @@ import { needsDeviceNotice, showDeviceNotice } from './ui/DeviceNotice';
 const app = document.getElementById('app');
 if (!app) throw new Error('Falta #app en index.html');
 
-const game = new Game(app);
+if (needsDeviceNotice()) showDeviceNotice(app);
+
+// El menú (HTML estático) ya se ve; el botón de entrar se habilita cuando la física está lista.
+let rapier;
+try {
+  rapier = await loadRapier();
+} catch (err: unknown) {
+  const start = document.getElementById('startBtn');
+  if (start) start.textContent = 'No se pudo cargar el juego. Recargá la página.';
+  throw err;
+}
+
+const game = new Game(app, rapier);
 
 if (debugEnabled()) {
   const overlay = new DebugOverlay(app);
   game.overlay = overlay;
-  // Rapier entra en la fase 2; mientras tanto, el overlay verifica que el WASM cargue.
-  overlay.set('rapier', 'cargando…');
-  loadRapier()
-    .then((rapier) => {
-      overlay.set('rapier', `OK ${rapier.version()}`);
-    })
-    .catch((err: unknown) => {
-      overlay.set('rapier', 'ERROR');
-      console.error('No se pudo inicializar Rapier', err);
-    });
+  overlay.set('rapier', rapier.version());
 }
 
 if (import.meta.env.DEV) {
@@ -34,7 +37,5 @@ if (import.meta.env.DEV) {
     createTuningPanel();
   });
 }
-
-if (needsDeviceNotice()) showDeviceNotice(app);
 
 game.start();

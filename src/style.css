@@ -87,8 +87,13 @@ h1 {
   box-shadow: 0 6px 30px rgba(224, 162, 76, 0.25);
 }
 
-.btn:hover {
+.btn:hover:not(:disabled) {
   filter: brightness(1.08);
+}
+
+.btn:disabled {
+  cursor: progress;
+  opacity: 0.6;
 }
 
 .btn:focus-visible {

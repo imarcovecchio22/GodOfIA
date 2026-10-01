@@ -8,6 +8,8 @@ import { CAMERA } from './data/camera';
 import { NO_INPUT } from './entities/Player';
 import { FxDirector } from './fx/FxDirector';
 import { World } from './game/World';
+import { PhysicsWorld } from './physics/PhysicsWorld';
+import type { Rapier } from './physics/rapier';
 import { AxeView } from './render/AxeView';
 import { CameraRig } from './render/CameraRig';
 import type { DebugOverlay } from './render/DebugOverlay';
@@ -35,6 +37,7 @@ export class Game {
   readonly scene = new Scene();
   readonly cameraRig = new CameraRig();
   readonly world: World;
+  readonly physics: PhysicsWorld;
   readonly renderer: Renderer;
   readonly audio = new AudioManager();
   readonly input: Input;
@@ -56,15 +59,20 @@ export class Game {
   private fallback = false;
   private best: BestRecord = loadBest();
 
-  constructor(app: HTMLElement) {
-    this.world = new World({
-      hitStop: (s) => {
-        this.time.hitStop(s);
+  constructor(app: HTMLElement, rapier: Rapier) {
+    this.physics = new PhysicsWorld(rapier);
+    this.cameraRig.obstacles = this.physics;
+    this.world = new World(
+      {
+        hitStop: (s) => {
+          this.time.hitStop(s);
+        },
+        shake: (a) => {
+          this.cameraRig.addTrauma(a);
+        },
       },
-      shake: (a) => {
-        this.cameraRig.addTrauma(a);
-      },
-    });
+      this.physics,
+    );
     this.renderer = new Renderer(app, this.cameraRig.camera);
     this.arena = new ArenaView(this.scene);
     this.playerView = new PlayerView(this.scene);
@@ -209,6 +217,9 @@ export class Game {
   }
 
   private bindScreens(): void {
+    const start = el('startBtn') as HTMLButtonElement;
+    start.textContent = 'Entrar a la arena';
+    start.disabled = false;
     for (const id of ['startBtn', 'resumeBtn', 'againBtn']) {
       el(id).addEventListener('click', () => {
         this.requestLock();
