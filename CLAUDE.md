@@ -33,6 +33,18 @@ daño, velocidades, hit-stop y shake se portan tal cual salvo que Nacho apruebe 
 - Herramientas de desarrollo (lil-gui, atajos) detrás de `import.meta.env.DEV` y con import
   dinámico.
 
+## Arquitectura (fase 1 en adelante)
+
+- `game/World` es el estado completo de la simulación: jugador, hacha, enemigos, orbes, oleadas,
+  estadísticas y eventos. No toca DOM ni WebGL; los tests lo crean con `game/testUtils.ts`.
+- La simulación solo recibe de la vista la cámara (`camYaw`, `aimOrigin`, `aimDir`) y
+  `player.handPos`. El hit-stop y el temblor salen por la interfaz `Feedback`.
+- Las vistas (`render/`, `fx/`, `ui/`, `audio/`) leen el estado o escuchan eventos; nunca modifican
+  la simulación.
+- Entidades con `prevPos`/`prevFacing` (snapshot al inicio de cada paso) para interpolar el render.
+- `render/colorSetup.ts` tiene que ser el primer import de `main.ts`.
+- Tests de timing: los valores de la tabla se verifican en ticks a 60 Hz.
+
 ## Decisiones tomadas
 
 - TypeScript fijado en `~6.0`: `typescript-eslint` todavía no soporta TS 7.

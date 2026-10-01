@@ -32,6 +32,10 @@ npm run dev        # servidor de desarrollo en http://localhost:5173
 En desarrollo se muestra un overlay con FPS, tiempo de frame, draw calls y estado de los sistemas.
 En producción se activa agregando `?debug` a la URL.
 
+En desarrollo también aparece un panel de tuning (lil-gui, arriba a la derecha, cerrado por
+defecto) que edita en vivo los valores de `src/data/`. Los cambios se pierden al recargar: para
+dejarlos fijos hay que pasarlos al archivo correspondiente.
+
 ## Despliegue
 
 - El repo está conectado a Vercel con el preset de Vite (`npm run build`, salida `dist`).
@@ -56,23 +60,24 @@ Pide mouse y teclado.
 | Esc             | Pausa                                |
 | M               | Silenciar                            |
 
-> Los controles se implementan en la fase 1. En la fase 0 solo hay una escena de prueba.
-
 ## Estructura
 
 ```
 src/
-  core/      Loop, Time (paso fijo, hit-stop, timeScale), Input, EventBus
-  render/    Renderer, PostFX, CameraRig, overlay de debug
-  physics/   Rapier (carga diferida), colliders y queries
-  combat/    Ataques data-driven, HitSystem, daño
-  entities/  Jugador, enemigos, hacha
-  ai/        FSM y comportamientos
-  fx/        Partículas con pooling
-  audio/     AudioManager y banco de sonidos
-  ui/        HUD y menús
+  Game.ts    Raíz de composición: modos (menú, juego, pausa, game over) y pointer lock
+  core/      Loop, Time (paso fijo, hit-stop, timeScale), Input, EventBus, Rng
+  game/      World (estado de la simulación), oleadas, estadísticas, eventos
+  entities/  Jugador, hacha, enemigos y orbes (simulación pura, testeable)
+  combat/    HitSystem y daño
+  ai/        FSM genérica
+  physics/   Colisión de la arena; Rapier (carga diferida) desde la fase 2
+  render/    Renderer, CameraRig, vistas de jugador/hacha/enemigos/orbes, overlay de debug
+  fx/        Partículas instanciadas, anillos y el director de FX
+  audio/     AudioManager y banco de sonidos sintetizados
+  ui/        HUD, récord y aviso de dispositivo
+  scenes/    Escenario de la arena
   data/      Todos los números de gameplay
-  scenes/    Escenas
+  dev/       Panel de tuning (solo desarrollo)
 reference/   Prototipo original (fuente de verdad del game feel)
 ```
 

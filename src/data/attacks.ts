@@ -42,7 +42,7 @@ export interface ImpactDef {
 export interface AttackDef {
   id: string;
   /** Ventana activa [inicio, fin] en segundos desde que arranca el ataque. */
-  active: readonly [number, number];
+  active: [number, number];
   total: number;
   damage: number;
   shape: HitShape;
@@ -147,7 +147,7 @@ export const HEAVY: AttackDef = {
 
 /** El lanzamiento usa la misma estructura para timing y pose; no hace daño cuerpo a cuerpo. */
 export interface ThrowDef {
-  active: readonly [number, number];
+  active: [number, number];
   total: number;
   /** Momento en que el hacha sale de la mano. */
   releaseAt: number;
