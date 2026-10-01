@@ -65,6 +65,7 @@ describe('Clips del jugador', () => {
       PLAYER_MODEL.dodge,
       PLAYER_MODEL.hurt,
       PLAYER_MODEL.death,
+      PLAYER_MODEL.recallPose.clip,
     ];
     for (const n of names) expect(durations.has(n), n).toBe(true);
   });

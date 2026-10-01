@@ -176,7 +176,7 @@ export class Game {
     const now = this.time.realTime;
 
     // En el menú el guerrero respira aunque la simulación esté quieta.
-    this.playerView.update(w.player, alpha, this.mode === 'menu' ? realDt : simDt);
+    this.playerView.update(w.player, w.axe, alpha, this.mode === 'menu' ? realDt : simDt);
     this.playerView.handWorldPosition(w.player.handPos);
     this.axeView.update(w.axe, alpha, now);
     this.enemyViews.update(alpha, simDt, this.playerView.root.position);

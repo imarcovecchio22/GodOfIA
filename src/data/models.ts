@@ -49,6 +49,8 @@ export const PLAYER_MODEL: CharacterModel & {
   death: string;
   /** Nodo del hacha dentro del modelo: es la que se lanza. */
   axeNode: string;
+  /** Pose del brazo derecho mientras el hacha vuelve (capa solo sobre esos huesos). */
+  recallPose: { clip: string; bones: string[]; fade: number; dominance: number };
   /** Hueso donde va el hacha (Three saca los puntos: `handslot.r` → `handslotr`). */
   handBone: string;
   axeGlow: number;
@@ -79,6 +81,12 @@ export const PLAYER_MODEL: CharacterModel & {
   hurtTimeScale: 1.6,
   death: 'Death_A',
   axeNode: '1H_Axe',
+  recallPose: {
+    clip: '1H_Ranged_Aiming',
+    bones: ['upperarm.r', 'lowerarm.r', 'wrist.r', 'hand.r', 'handslot.r'],
+    fade: 0.12,
+    dominance: 8,
+  },
   handBone: 'handslotr',
   axeGlow: 0x0e3a44,
 };

@@ -3,6 +3,7 @@ import { HEAVY, LIGHT_COMBO, THROW, type AttackDef } from '../data/attacks';
 import { PLAYER_MODEL } from '../data/models';
 import { PLAYER } from '../data/player';
 import { clamp, lerpAngle } from '../core/math';
+import type { AxeSim } from '../entities/Axe';
 import type { PlayerSim, PlayerState } from '../entities/Player';
 import { Animator } from './Animator';
 import { instantiate, type CharacterTemplate } from './characters';
@@ -49,11 +50,11 @@ export class PlayerView {
    * `dt` es tiempo de simulación del frame (0 durante el hit-stop: la pose queda congelada en el
    * impacto). En el menú se pasa tiempo real para que respire.
    */
-  update(p: PlayerSim, alpha: number, dt: number): void {
+  update(p: PlayerSim, axe: AxeSim, alpha: number, dt: number): void {
     interp.lerpVectors(p.prevPos, p.pos, alpha);
     this.root.position.copy(interp);
     this.root.rotation.y = lerpAngle(p.prevFacing, p.facing, alpha);
-    this.animate(p, dt);
+    this.animate(p, axe, dt);
     // Parpadeo durante la invulnerabilidad.
     this.root.visible = !(
       p.invuln > 0 &&
@@ -83,7 +84,7 @@ export class PlayerView {
     this.animator.setBase(L.run, run, ts(L.runClipSpeed), fade);
   }
 
-  private animate(p: PlayerSim, dt: number): void {
+  private animate(p: PlayerSim, axe: AxeSim, dt: number): void {
     const st = p.state;
     const t = p.fsm.t;
     // Una acción nueva (aunque sea el mismo estado): reinicia el clip.
@@ -93,6 +94,10 @@ export class PlayerView {
     this.lastAttack = p.attack;
     const a = this.animator;
     this.locomotion(p.vel.length(), M.locomotionFade);
+    // Brazo extendido llamando al hacha, solo si no está haciendo otra acción.
+    const R = M.recallPose;
+    const calling = axe.state === 'recall' && (st === 'idle' || st === 'move');
+    a.setPartial('recall', R.clip, R.bones, calling ? 1 : 0, R.fade, R.dominance);
 
     if (st === 'attack' || st === 'heavy') {
       const def = p.attack ?? HEAVY;

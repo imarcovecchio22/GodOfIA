@@ -28,6 +28,7 @@ import {
   type Scene,
 } from 'three';
 import { ARENA, LIGHTING, pillarPositions, rockLayout, torchPositions } from '../data/arena';
+import { GLOW } from '../data/graphics';
 import { box, cyl, mat } from '../render/primitives';
 
 const rand = (a: number, b: number): number => a + Math.random() * (b - a);
@@ -128,7 +129,7 @@ export class ArenaView {
 
     // Runas: tres anillos y 16 marcas instanciadas.
     const runeMat = new MeshBasicMaterial({
-      color: 0x4fc6d8,
+      color: new Color(0x4fc6d8).multiplyScalar(GLOW.runes),
       transparent: true,
       opacity: 0.45,
       side: DoubleSide,
@@ -190,7 +191,9 @@ export class ArenaView {
 
     // Columnas.
     const pillarM = mat(0x55595f, { roughness: 0.95 });
-    const glowM = new MeshBasicMaterial({ color: 0x5fd4e6 });
+    const glowM = new MeshBasicMaterial({
+      color: new Color(0x5fd4e6).multiplyScalar(GLOW.pillarRings),
+    });
     const ph = ARENA.pillarHeight;
     for (const p of pillarPositions()) {
       const col = cyl(0.8, 0.95, ph, pillarM, 9);
@@ -209,8 +212,12 @@ export class ArenaView {
     // Antorchas.
     const darkM = mat(0x2a2522);
     const bowlM = mat(0x6a5a48, { metalness: 0.5 });
-    const flameM = new MeshBasicMaterial({ color: 0xffa040 });
-    const flameInM = new MeshBasicMaterial({ color: 0xfff0b0 });
+    const flameM = new MeshBasicMaterial({
+      color: new Color(0xffa040).multiplyScalar(GLOW.flames),
+    });
+    const flameInM = new MeshBasicMaterial({
+      color: new Color(0xfff0b0).multiplyScalar(GLOW.flames),
+    });
     for (const t of torchPositions()) {
       const pole = cyl(0.07, 0.09, 2.3, darkM, 6);
       pole.position.set(t.x, 1.15, t.z);
@@ -250,7 +257,7 @@ export class ArenaView {
       new Points(
         this.emberGeo,
         new PointsMaterial({
-          color: 0xffa850,
+          color: new Color(0xffa850).multiplyScalar(GLOW.embers),
           size: 0.09,
           transparent: true,
           opacity: 0.8,

@@ -19,6 +19,17 @@ export const QUALITY: Record<Quality, QualityPreset> = {
 
 export const DEFAULT_QUALITY: Quality = 'medium';
 
+/**
+ * Brillo HDR de los elementos emisivos del escenario: el color se multiplica por encima de 1 para
+ * que el bloom los agarre (sin bloom, en calidad baja, se ven igual que antes).
+ */
+export const GLOW = {
+  runes: 2.4,
+  pillarRings: 2.6,
+  flames: 2.2,
+  embers: 1.4,
+};
+
 export interface PostFxTuning {
   exposure: number;
   /** Solo brilla lo que supera esta luminancia (llamas, runas, ojos, hacha). */

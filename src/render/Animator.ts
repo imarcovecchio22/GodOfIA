@@ -1,9 +1,10 @@
 import {
+  AnimationClip,
   AnimationMixer,
+  PropertyBinding,
   LoopOnce,
   LoopRepeat,
   type AnimationAction,
-  type AnimationClip,
   type Object3D,
 } from 'three';
 
@@ -38,6 +39,8 @@ export class Animator {
   private readonly base = new Map<string, Layer>();
   private readonly overlays: Layer[] = [];
   private current: Layer | null = null;
+  /** Capas parciales (solo algunos huesos), por nombre. */
+  private readonly partials = new Map<string, Layer & { dominance: number }>();
 
   constructor(root: Object3D, clips: AnimationClip[]) {
     this.mixer = new AnimationMixer(root);
@@ -73,6 +76,39 @@ export class Animator {
     layer.target = weight;
     layer.rate = fade > 0 ? 1 / fade : Infinity;
     layer.action.timeScale = timeScale;
+  }
+
+  /**
+   * Capa sobre algunos huesos (por ejemplo, el brazo que llama al hacha). El mixer promedia por
+   * peso las acciones que tocan el mismo hueso: `dominance` hace que la capa se imponga sobre la
+   * base en esos huesos sin afectar al resto del cuerpo.
+   */
+  setPartial(
+    name: string,
+    clip: string,
+    bones: readonly string[],
+    weight: number,
+    fade: number,
+    dominance: number,
+  ): void {
+    let layer = this.partials.get(name);
+    if (!layer) {
+      const source = this.clips.get(clip);
+      if (!source) throw new Error(`No existe el clip ${clip}`);
+      // Three saca los puntos de los nombres de nodo: 'hand.r' → 'handr'.
+      const keep = new Set(bones.map((b) => PropertyBinding.sanitizeNodeName(b)));
+      const tracks = source.tracks.filter((t) => keep.has(t.name.split('.')[0] ?? ''));
+      const sub = new AnimationClip(`${clip}#${name}`, source.duration, tracks);
+      const action = this.mixer.clipAction(sub);
+      action.setLoop(LoopRepeat, Infinity);
+      action.play();
+      action.setEffectiveWeight(0);
+      layer = { action, weight: 0, target: 0, rate: 1, dominance };
+      this.partials.set(name, layer);
+    }
+    layer.target = weight;
+    layer.rate = fade > 0 ? 1 / fade : Infinity;
+    layer.dominance = dominance;
   }
 
   get currentAction(): string | null {
@@ -156,6 +192,10 @@ export class Animator {
     const baseShare = Math.max(0, 1 - Math.min(overlaySum, 1));
     for (const l of this.base.values()) {
       l.action.setEffectiveWeight(baseSum > 0 ? (l.weight / baseSum) * baseShare : 0);
+    }
+    for (const l of this.partials.values()) {
+      step(l);
+      l.action.setEffectiveWeight(l.weight * l.dominance);
     }
     this.mixer.update(dt);
   }
