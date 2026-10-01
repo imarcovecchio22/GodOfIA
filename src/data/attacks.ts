@@ -3,17 +3,6 @@
  * Valores portados de `reference/prototype.html`.
  */
 
-/** Pose del brazo derecho y torso para la animación procedural (radianes). */
-export interface ArmPose {
-  x: number;
-  y: number;
-  z: number;
-  /** Rotación X del hacha en la mano. */
-  ax: number;
-  /** Giro del torso. */
-  tw: number;
-}
-
 /** Arco frente al jugador: entra todo lo que está a menos de `range` y dentro del cono. */
 export interface ArcShape {
   kind: 'arc';
@@ -55,7 +44,6 @@ export interface AttackDef {
   heavy: boolean;
   /** Si está, pega una sola vez en `impact.at` en vez de durante toda la ventana. */
   impact?: ImpactDef;
-  pose: { from: ArmPose; to: ArmPose };
 }
 
 export interface CombatTuning {
@@ -73,8 +61,6 @@ export const COMBAT: CombatTuning = {
   arcKnockbackBlend: 0.5,
 };
 
-export const REST_POSE: ArmPose = { x: -0.25, y: 0, z: -0.1, ax: -1.25, tw: 0 };
-
 export const LIGHT_COMBO: AttackDef[] = [
   {
     id: 'light1',
@@ -87,10 +73,6 @@ export const LIGHT_COMBO: AttackDef[] = [
     hitStop: 0.05,
     shake: 0.22,
     heavy: false,
-    pose: {
-      from: { x: -2.5, y: -0.5, z: -0.3, ax: -0.9, tw: 0.5 },
-      to: { x: 0.3, y: 0.4, z: 0, ax: -0.3, tw: -0.5 },
-    },
   },
   {
     id: 'light2',
@@ -103,10 +85,6 @@ export const LIGHT_COMBO: AttackDef[] = [
     hitStop: 0.05,
     shake: 0.22,
     heavy: false,
-    pose: {
-      from: { x: -1.4, y: -1.3, z: 0, ax: 0, tw: -0.8 },
-      to: { x: -1.4, y: 1.3, z: 0, ax: 0, tw: 0.9 },
-    },
   },
   {
     id: 'light3',
@@ -120,10 +98,6 @@ export const LIGHT_COMBO: AttackDef[] = [
     shake: 0.42,
     // En el prototipo el tercer golpe también aturde a los brutos.
     heavy: true,
-    pose: {
-      from: { x: -3.1, y: 0, z: 0, ax: -1.3, tw: 0 },
-      to: { x: 0.4, y: 0, z: 0, ax: -0.4, tw: 0 },
-    },
   },
 ];
 
@@ -139,27 +113,18 @@ export const HEAVY: AttackDef = {
   shake: 0.7,
   heavy: true,
   impact: { at: 0.43, shake: 0.35, ringRadius: 3.4, ringDuration: 0.4 },
-  pose: {
-    from: { x: -3.2, y: 0.1, z: 0, ax: -1.4, tw: 0 },
-    to: { x: 0.6, y: 0, z: 0, ax: -0.3, tw: 0 },
-  },
 };
 
-/** El lanzamiento usa la misma estructura para timing y pose; no hace daño cuerpo a cuerpo. */
+/** El lanzamiento: timing de la acción; no hace daño cuerpo a cuerpo. */
 export interface ThrowDef {
   active: [number, number];
   total: number;
   /** Momento en que el hacha sale de la mano. */
   releaseAt: number;
-  pose: { from: ArmPose; to: ArmPose };
 }
 
 export const THROW: ThrowDef = {
   active: [0.1, 0.16],
   total: 0.36,
   releaseAt: 0.12,
-  pose: {
-    from: { x: -2.8, y: -0.3, z: -0.3, ax: -1.2, tw: 0.6 },
-    to: { x: -1.2, y: 0.2, z: 0, ax: 0, tw: -0.4 },
-  },
 };

@@ -1,115 +1,40 @@
-import {
-  ConeGeometry,
-  Group,
-  Mesh,
-  MeshBasicMaterial,
-  SphereGeometry,
-  type MeshStandardMaterial,
-  type Scene,
-} from 'three';
+import type { Object3D, Scene, Vector3 } from 'three';
 import { ENEMY, type EnemyKind } from '../data/enemies';
-import { lerpAngle } from '../core/math';
+import { ANIMATION, ENEMY_MODELS } from '../data/models';
+import { clamp, lerpAngle } from '../core/math';
 import type { EnemySim } from '../entities/Enemy';
-import { box, cyl, mat, mesh, sph } from './primitives';
+import { Animator } from './Animator';
+import { instantiate, type CharacterInstance, type CharacterTemplate } from './characters';
+import { warpTime } from './timeWarp';
 
-const EYE_IDLE = 0x66e6ff;
-const EYE_ATTACK = 0xff3a22;
-const EYE_FROZEN = 0xffffff;
-const EYE_DEAD = 0x222222;
-
-/** Draugr o bruto de primitivas. Cada instancia tiene sus materiales para el destello. */
+/** Draugr o bruto animado. Cada instancia tiene sus materiales para el destello y los ojos. */
 class EnemyView {
-  readonly g = new Group();
-  readonly rig = new Group();
-  readonly mats: MeshStandardMaterial[] = [];
-  readonly eyeM = new MeshBasicMaterial({ color: EYE_IDLE });
-  readonly legL: Group;
-  readonly legR: Group;
-  readonly armL: Group;
-  readonly armR: Group;
+  readonly root: Object3D;
+  private readonly inst: CharacterInstance;
+  private readonly animator: Animator;
+  private lastState = '';
+  private lastT = 0;
 
-  constructor(readonly kind: EnemyKind) {
-    const brute = kind === 'brute';
-    this.g.add(this.rig);
-    const M = (c: number, o: Parameters<typeof mat>[1] = {}): MeshStandardMaterial => {
-      const m = mat(c, o);
-      this.mats.push(m);
-      return m;
-    };
-    const flesh = M(brute ? 0x56614f : 0x6f7c64, { roughness: 0.95 });
-    const rag = M(0x3a3430);
-    const rust = M(0x6b4a33, { metalness: 0.5, roughness: 0.6 });
-
-    const body = cyl(0.3, 0.36, 0.9, flesh, 10);
-    body.position.y = 1.15;
-    const rg = cyl(0.38, 0.43, 0.45, rag, 10);
-    rg.position.y = 0.78;
-    const hd = sph(0.24, flesh, 12);
-    hd.position.y = 1.82;
-    const helm = mesh(new SphereGeometry(0.27, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), rust);
-    helm.position.y = 1.86;
-    this.rig.add(body, rg, hd, helm);
-    if (brute) {
-      const hornM = M(0xd9cfb8);
-      for (const s of [-1, 1]) {
-        const h = mesh(new ConeGeometry(0.07, 0.38, 6), hornM);
-        h.position.set(0.26 * s, 2.02, 0);
-        h.rotation.z = -0.9 * s;
-        this.rig.add(h);
-      }
-    }
-    for (const x of [-0.09, 0.09]) {
-      const e = new Mesh(new SphereGeometry(0.045, 6, 4), this.eyeM);
-      e.position.set(x, 1.82, 0.21);
-      this.rig.add(e);
-    }
-    const leg = (x: number): Group => {
-      const p = new Group();
-      p.position.set(x, 0.62, 0);
-      const b = box(0.18, 0.62, 0.2, rag);
-      b.position.y = -0.31;
-      p.add(b);
-      this.rig.add(p);
-      return p;
-    };
-    const arm = (x: number): Group => {
-      const p = new Group();
-      p.position.set(x, 1.5, 0);
-      p.rotation.order = 'YXZ';
-      const b = box(0.16, 0.66, 0.18, flesh);
-      b.position.y = -0.33;
-      p.add(b);
-      this.rig.add(p);
-      return p;
-    };
-    this.legL = leg(0.15);
-    this.legR = leg(-0.15);
-    this.armL = arm(0.42);
-    this.armR = arm(-0.42);
-    if (brute) {
-      const club = cyl(0.09, 0.17, 1.0, rust, 7);
-      club.position.y = -1.05;
-      this.armR.add(club);
-    } else {
-      const sword = box(0.05, 0.8, 0.12, rust);
-      sword.position.set(0, -1.0, 0.02);
-      this.armR.add(sword);
-    }
-    this.g.scale.setScalar(brute ? 1.45 : 1);
+  constructor(
+    readonly kind: EnemyKind,
+    template: CharacterTemplate,
+  ) {
+    const model = ENEMY_MODELS[kind];
+    this.inst = instantiate(template, { tint: model.tint, eyesNode: model.eyesNode });
+    this.root = this.inst.root;
+    this.animator = new Animator(this.root, template.clips);
   }
 
-  /** Vuelve a la pose neutra al reutilizarse desde el pool. */
-  reset(): void {
-    this.rig.rotation.set(0, 0, 0);
-    this.legL.rotation.set(0, 0, 0);
-    this.legR.rotation.set(0, 0, 0);
-    this.armL.rotation.set(0, 0, 0);
-    this.armR.rotation.set(0, 0, 0);
-    this.eyeM.color.setHex(EYE_IDLE);
-    for (const m of this.mats) m.emissive.setRGB(0, 0, 0);
+  /** Vuelve a un estado neutro al reutilizarse desde el pool. */
+  reset(e: EnemySim): void {
+    this.lastState = '';
+    this.animator.stop(0);
+    this.root.scale.setScalar(ENEMY_MODELS[this.kind].scale * e.arch.scale);
+    this.inst.body.emissive.setRGB(0, 0, 0);
   }
 
-  update(e: EnemySim, alpha: number): void {
+  update(e: EnemySim, alpha: number, dt: number, player: Vector3): void {
+    const model = ENEMY_MODELS[this.kind];
     const st = e.state;
     const t = e.fsm.t;
 
@@ -131,59 +56,96 @@ class EnemyView {
       eg = Math.max(eg, e.flash);
       eb = Math.max(eb, e.flash);
     }
-    for (const m of this.mats) m.emissive.setRGB(er, eg, eb);
+    this.inst.body.emissive.setRGB(er, eg, eb);
+    this.inst.eyes?.color.setHex(
+      st === 'dead'
+        ? model.eyeDead
+        : st === 'windup' || st === 'attack'
+          ? model.eyeAttack
+          : st === 'frozen'
+            ? model.eyeFrozen
+            : model.eyeIdle,
+    );
 
     const x = e.prevPos.x + (e.pos.x - e.prevPos.x) * alpha;
     const z = e.prevPos.z + (e.pos.z - e.prevPos.z) * alpha;
-    const facing = lerpAngle(e.prevFacing, e.facing, alpha);
+    const sink = st === 'dead' ? Math.max(0, t - ENEMY.deathSinkDelay) * ENEMY.deathSinkSpeed : 0;
+    this.root.position.set(x, -sink, z);
+    this.root.rotation.y = lerpAngle(e.prevFacing, e.facing, alpha);
 
-    if (st === 'dead') {
-      this.eyeM.color.setHex(EYE_DEAD);
-      this.rig.rotation.x = -Math.min(t * 4, 1) * 1.45;
-      const sink = Math.max(0, t - ENEMY.deathSinkDelay) * ENEMY.deathSinkSpeed;
-      this.g.position.set(x, -sink, z);
-      return;
-    }
-    if (st === 'spawn') {
-      const u = Math.min(t / ENEMY.spawnDuration, 1);
-      this.g.position.set(x, -ENEMY.spawnDepth * (1 - u) * (1 - u), z);
-      this.g.rotation.y = facing;
-      return;
-    }
+    const near = Math.hypot(x - player.x, z - player.z) < ANIMATION.shadowDistance;
+    this.inst.bodyMesh.castShadow = near;
 
-    if (st !== 'frozen') {
-      const mv = e.moving;
-      const sw = Math.sin(e.walk) * 0.6 * mv;
-      this.legL.rotation.x = sw;
-      this.legR.rotation.x = -sw;
-      let rx = -1.3 + Math.sin(e.walk * 0.5) * 0.15;
-      let lx = -1.2 - Math.sin(e.walk * 0.5) * 0.15;
-      let lean = 0.12 * mv;
-      if (st === 'windup') {
-        const u = Math.min(t / e.arch.windup, 1);
-        rx = -1.3 - 1.5 * u;
-        lean = -0.25 * u;
-      } else if (st === 'attack') {
-        const u = Math.min(t / 0.14, 1);
-        rx = -2.8 + 3.4 * u;
-        lean = 0.35 * u;
-      } else if (st === 'recover') {
-        rx = 0.6 - 1.9 * Math.min(t / 0.5, 1);
-        lean = 0.2;
-      } else if (st === 'stagger') {
-        lean = -0.4;
-        rx = -0.3;
-        lx = -0.3;
-      }
-      this.armR.rotation.x = rx;
-      this.armL.rotation.x = lx;
-      this.rig.rotation.x = lean;
-    }
-    this.eyeM.color.setHex(
-      st === 'windup' || st === 'attack' ? EYE_ATTACK : st === 'frozen' ? EYE_FROZEN : EYE_IDLE,
+    this.animate(e, dt);
+  }
+
+  private animate(e: EnemySim, dt: number): void {
+    const model = ENEMY_MODELS[this.kind];
+    const a = this.animator;
+    const st = e.state;
+    const t = e.fsm.t;
+    const restart = st !== this.lastState || t < this.lastT;
+    this.lastState = st;
+    this.lastT = t;
+
+    const L = model.locomotion;
+    const moving = e.moving > 0 && st === 'chase';
+    a.setBase(L.idle, moving ? 0 : 1, 1, model.locomotionFade);
+    a.setBase(
+      L.walk,
+      moving ? 1 : 0,
+      clamp(e.speed / L.walkClipSpeed, 0.5, L.maxTimeScale),
+      model.locomotionFade,
     );
-    this.g.position.set(x, 0, z);
-    this.g.rotation.y = facing;
+
+    const arch = e.arch;
+    switch (st) {
+      case 'spawn': {
+        const time = (t / ENEMY.spawnDuration) * model.spawnEnd;
+        a.drive(model.spawn, time, { fade: 0 });
+        break;
+      }
+      case 'windup':
+      case 'attack':
+      case 'recover': {
+        // Carga, golpe y recuperación son un solo clip; el contacto cae en la ventana de daño.
+        const seq =
+          st === 'windup'
+            ? t
+            : st === 'attack'
+              ? arch.windup + t
+              : arch.windup + ENEMY.attackDuration + t;
+        const time = warpTime(
+          seq,
+          arch.windup + ANIMATION.enemyContactDelay,
+          arch.windup + ENEMY.attackDuration + arch.recover,
+          model.attack.contact,
+          a.duration(model.attack.clip),
+        );
+        a.drive(model.attack.clip, time, {
+          fade: model.actionFade,
+          restart: st === 'windup' && restart,
+        });
+        break;
+      }
+      case 'stagger':
+        a.play(model.hit, {
+          fade: model.actionFade,
+          timeScale: model.hitTimeScale,
+          restart,
+        });
+        break;
+      case 'dead':
+        a.play(model.death, { fade: model.actionFade });
+        break;
+      case 'frozen':
+        // Congelado: la pose queda quieta (no avanza el mixer).
+        a.update(0);
+        return;
+      default:
+        a.stop(model.locomotionFade);
+    }
+    a.update(dt);
   }
 }
 
@@ -192,27 +154,30 @@ export class EnemyViews {
   private readonly free: Record<EnemyKind, EnemyView[]> = { draugr: [], brute: [] };
   private readonly bound = new Map<EnemySim, EnemyView>();
 
-  constructor(private readonly scene: Scene) {}
+  constructor(
+    private readonly scene: Scene,
+    private readonly templates: Record<EnemyKind, CharacterTemplate>,
+  ) {}
 
   acquire(e: EnemySim): void {
-    const view = this.free[e.arch.kind].pop() ?? new EnemyView(e.arch.kind);
-    view.reset();
-    view.g.visible = true;
-    this.scene.add(view.g);
+    const kind = e.arch.kind;
+    const view = this.free[kind].pop() ?? new EnemyView(kind, this.templates[kind]);
+    view.reset(e);
+    view.root.visible = true;
+    this.scene.add(view.root);
     this.bound.set(e, view);
-    view.update(e, 1);
   }
 
   release(e: EnemySim): void {
     const view = this.bound.get(e);
     if (!view) return;
     this.bound.delete(e);
-    view.g.visible = false;
-    this.scene.remove(view.g);
+    view.root.visible = false;
+    this.scene.remove(view.root);
     this.free[view.kind].push(view);
   }
 
-  update(alpha: number): void {
-    for (const [e, view] of this.bound) view.update(e, alpha);
+  update(alpha: number, dt: number, player: Vector3): void {
+    for (const [e, view] of this.bound) view.update(e, alpha, dt, player);
   }
 }

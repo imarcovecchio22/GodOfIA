@@ -3,6 +3,7 @@ import { HEAVY, LIGHT_COMBO, THROW, COMBAT } from '../data/attacks';
 import { AXE } from '../data/axe';
 import { CAMERA } from '../data/camera';
 import { BRUTE, DRAUGR, ENEMY } from '../data/enemies';
+import { ANIMATION, ENEMY_MODELS, PLAYER_MODEL } from '../data/models';
 import { PLAYER } from '../data/player';
 import { COMBO, ORBS, WAVES } from '../data/waves';
 
@@ -12,7 +13,7 @@ function addAll(folder: GUI, obj: object): void {
   for (const [key, value] of Object.entries(record)) {
     if (typeof value === 'number' || typeof value === 'boolean') {
       folder.add(record, key);
-    } else if (value && typeof value === 'object' && key !== 'pose') {
+    } else if (value && typeof value === 'object') {
       // Los arreglos (ventanas activas) entran como objetos con claves "0", "1".
       addAll(folder.addFolder(key).close(), value);
     }
@@ -40,5 +41,10 @@ export function createTuningPanel(): GUI {
   addAll(gui.addFolder('Orbes').close(), ORBS);
   addAll(gui.addFolder('Combo').close(), COMBO);
   addAll(gui.addFolder('Cámara').close(), CAMERA);
+  const anim = gui.addFolder('Animación').close();
+  addAll(anim.addFolder('Jugador').close(), PLAYER_MODEL);
+  addAll(anim.addFolder('Draugr').close(), ENEMY_MODELS.draugr);
+  addAll(anim.addFolder('Bruto').close(), ENEMY_MODELS.brute);
+  addAll(anim.addFolder('General').close(), ANIMATION);
   return gui;
 }
