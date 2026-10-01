@@ -43,6 +43,14 @@ daño, velocidades, hit-stop y shake se portan tal cual salvo que Nacho apruebe 
   la simulación.
 - Entidades con `prevPos`/`prevFacing` (snapshot al inicio de cada paso) para interpolar el render.
 - `render/colorSetup.ts` tiene que ser el primer import de `main.ts`.
+- Física (fase 2): `physics/PhysicsWorld` arma el escenario estático de Rapier y nunca simula
+  cuerpos; se usa para el character controller y consultas. Grupos en `physics/groups.ts`: `WALL`
+  (borde invisible, solo personajes), `SOLID` (columnas y antorchas: personajes, cámara, hacha),
+  `DECOR` (rocas: solo cámara). Si se agregan colliders estáticos hay que llamar `world.step()`
+  después, o las consultas no los ven.
+- Cada personaje calcula su desplazamiento libremente y al final del paso lo resuelve
+  `collision.moveCharacter(body, prevPos, pos)`. En enemigos, la separación va antes de resolver.
+- Los tests inicializan Rapier en `src/test/setup.ts`; `makeWorld()` arma un `PhysicsWorld` real.
 - Tests de timing: los valores de la tabla se verifican en ticks a 60 Hz.
 
 ## Decisiones tomadas

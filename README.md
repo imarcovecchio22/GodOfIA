@@ -70,7 +70,7 @@ src/
   entities/  Jugador, hacha, enemigos y orbes (simulación pura, testeable)
   combat/    HitSystem y daño
   ai/        FSM genérica
-  physics/   Colisión de la arena; Rapier (carga diferida) desde la fase 2
+  physics/   Rapier (carga diferida): escenario, character controller y consultas
   render/    Renderer, CameraRig, vistas de jugador/hacha/enemigos/orbes, overlay de debug
   fx/        Partículas instanciadas, anillos y el director de FX
   audio/     AudioManager y banco de sonidos sintetizados
