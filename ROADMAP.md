@@ -19,6 +19,9 @@ Plan por fases completo en `BRIEF.md`. Acá van las notas pendientes y la deuda 
   (`data/arena.ts`). Al sumar postprocessing conviene pasar a sRGB + tone mapping y recalibrar.
 - **Mano del jugador.** El hacha sale y vuelve a `PlayerSim.handPos`, que la vista toma del hueso
   `handslot.r` en cada frame.
+- **Look del protagonista.** Por ahora, gorro de oso (decisión de Nacho). Si en la fase 4 se busca un
+  tono más serio, probar un casco o capucha CC0 (por ejemplo, de Quaternius) colgado del hueso de la
+  cabeza con el mismo pipeline.
 - **Pose de llamado del hacha.** El prototipo levantaba el brazo al llamarla; con los modelos no hay
   pose especial (haría falta una capa solo para el brazo). Candidato a la fase 4.
 - **Piernas cortas.** Los personajes de KayKit son chibi: los ciclos de caminar y correr van

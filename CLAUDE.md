@@ -69,6 +69,8 @@ daño, velocidades, hit-stop y shake se portan tal cual salvo que Nacho apruebe 
   durante el 3er golpe se pierde.
 - El presupuesto de 150 draw calls incluye la pasada de sombras.
 - Fuente Cinzel self-hosteada con `@fontsource` (OFL), sin CDN.
+- Protagonista: Bárbaro de KayKit **con el gorro de oso y sin capa**. Sin gorro (pelado, barba, hacha
+  de hielo que vuelve) se parecía demasiado al protagonista de God of War; no volver a esa variante.
 
 ## Propiedad intelectual
 
