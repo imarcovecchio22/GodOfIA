@@ -2,9 +2,11 @@ import { Vector3 } from 'three';
 import { Fsm, type StateTable } from '../ai/Fsm';
 import { resolvePlayerAttack } from '../combat/HitSystem';
 import { HEAVY, LIGHT_COMBO, THROW, type AttackDef } from '../data/attacks';
+import { PHYSICS } from '../data/physics';
 import { PLAYER } from '../data/player';
 import { damp, lerpAngle } from '../core/math';
 import type { EnemySim } from './Enemy';
+import type { CharacterBody } from '../game/collision';
 import type { World } from '../game/World';
 
 export type PlayerState =
@@ -87,7 +89,10 @@ export class PlayerSim {
   impacted = false;
   released = false;
 
+  private readonly body: CharacterBody;
+
   constructor(private readonly world: World) {
+    this.body = world.collision.createCharacter(PLAYER.radius, PHYSICS.characterHeight);
     this.reset();
   }
 
@@ -155,7 +160,8 @@ export class PlayerSim {
 
     this.pos.addScaledVector(this.kb, dt);
     this.kb.multiplyScalar(Math.pow(PLAYER.knockbackDecay, dt));
-    this.world.collision.collide(this.pos, PLAYER.radius);
+    // Todo el desplazamiento del paso (caminar, lunge, rodada, empuje) pasa por el controller.
+    this.world.collision.moveCharacter(this.body, this.prevPos, this.pos);
   }
 
   private computeMoveInput(input: PlayerInput): void {

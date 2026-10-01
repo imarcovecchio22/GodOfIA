@@ -1,4 +1,6 @@
 import { Rng } from '../core/Rng';
+import { PhysicsWorld } from '../physics/PhysicsWorld';
+import { rapier } from '../physics/rapier';
 import type { EnemyKind } from '../data/enemies';
 import type { EnemySim } from '../entities/Enemy';
 import { NO_INPUT, type PlayerInput } from '../entities/Player';
@@ -19,9 +21,14 @@ export class RecordingFeedback implements Feedback {
   }
 }
 
-export function makeWorld(seed = 1): { world: World; feedback: RecordingFeedback } {
+export function makeWorld(seed = 1): {
+  world: World;
+  feedback: RecordingFeedback;
+  physics: PhysicsWorld;
+} {
   const feedback = new RecordingFeedback();
-  const world = new World(feedback, new Rng(seed));
+  const physics = new PhysicsWorld(rapier());
+  const world = new World(feedback, physics, new Rng(seed));
   world.reset();
   // Jugador en el origen mirando a +Z; la cámara detrás (yaw = π → adelante es +Z).
   world.player.pos.set(0, 0, 0);
@@ -30,7 +37,7 @@ export function makeWorld(seed = 1): { world: World; feedback: RecordingFeedback
   world.camYaw = Math.PI;
   // Sin oleadas automáticas: cada test pone sus enemigos.
   world.waves.between = Number.POSITIVE_INFINITY;
-  return { world, feedback };
+  return { world, feedback, physics };
 }
 
 export function input(over: Partial<PlayerInput> = {}): PlayerInput {

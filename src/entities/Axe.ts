@@ -145,7 +145,10 @@ export class AxeSim {
       return undefined;
     }
 
-    if (w.collision.obstacleAt(p, AXE.obstacleHitPadding, AXE.obstacleHeight)) {
+    // Raycast del tramo recorrido en este paso: se clava justo en la superficie.
+    const hit = w.collision.castSolid(this.prevPos, p);
+    if (hit >= 0) {
+      p.lerpVectors(this.prevPos, p, hit);
       return this.embed('obstacle');
     }
     if (p.y <= AXE.floorHeight) {

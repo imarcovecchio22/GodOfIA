@@ -5,19 +5,18 @@ import { AxeSim } from '../entities/Axe';
 import { EnemyManager } from '../entities/Enemy';
 import { Orbs } from '../entities/Orbs';
 import { PlayerSim, type PlayerInput } from '../entities/Player';
-import { ArenaCollision } from '../physics/ArenaCollision';
+import type { Collision } from './collision';
 import type { Feedback, GameEvents } from './events';
 import { Stats } from './Stats';
 import { WaveDirector } from './WaveDirector';
 
 /**
  * Estado completo de la simulación. No toca el DOM ni WebGL, así que corre en tests.
- * Lo único que viene de la vista es la cámara (`camYaw`, `aimOrigin`, `aimDir`) y la posición
- * de la mano del jugador.
+ * La física llega por la interfaz `Collision`. Lo único que viene de la vista es la cámara
+ * (`camYaw`, `aimOrigin`, `aimDir`) y la posición de la mano del jugador.
  */
 export class World {
   readonly events = new EventBus<GameEvents>();
-  readonly collision = new ArenaCollision();
   readonly stats = new Stats(this.events);
   readonly player: PlayerSim;
   readonly axe: AxeSim;
@@ -35,6 +34,7 @@ export class World {
 
   constructor(
     readonly feedback: Feedback,
+    readonly collision: Collision,
     readonly rng: Rng = new Rng(),
   ) {
     this.player = new PlayerSim(this);

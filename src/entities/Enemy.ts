@@ -2,8 +2,10 @@ import { Vector3 } from 'three';
 import { Fsm, type StateTable } from '../ai/Fsm';
 import { ARENA } from '../data/arena';
 import { ARCHETYPES, ENEMY, type EnemyArchetype, type EnemyKind } from '../data/enemies';
+import { PHYSICS } from '../data/physics';
 import { PLAYER } from '../data/player';
 import { damp, lerpAngle } from '../core/math';
+import type { CharacterBody } from '../game/collision';
 import type { World } from '../game/World';
 
 export type EnemyState =
@@ -59,6 +61,10 @@ export class EnemySim {
   readonly fsm = new Fsm<EnemyState, EnemySim>(STATES, 'spawn');
   arch: EnemyArchetype;
   active = false;
+  /** Cápsula de colisión; se recrea si el enemigo del pool cambia de arquetipo. */
+  body: CharacterBody | null = null;
+  /** Si en este paso se movió y hay que resolver su colisión con el escenario. */
+  needsCollision = false;
 
   readonly pos = new Vector3();
   readonly prevPos = new Vector3();
@@ -108,6 +114,10 @@ export class EnemySim {
     const rng = this.world.rng;
     this.arch = a;
     this.active = true;
+    if (this.body?.radius !== a.radius) {
+      if (this.body) this.world.collision.removeCharacter(this.body);
+      this.body = this.world.collision.createCharacter(a.radius, PHYSICS.characterHeight * a.scale);
+    }
     this.fsm.reset('spawn');
     this.pos.set(x, 0, z);
     this.prevPos.copy(this.pos);
@@ -149,12 +159,12 @@ export class EnemySim {
     const before = this.fsm.state;
     this.fsm.update(this, dt);
     // Los que salen del piso y los muertos no se empujan ni chocan.
-    if (before === 'spawn' || before === 'dead' || !this.active) return;
+    this.needsCollision = before !== 'spawn' && before !== 'dead' && this.active;
+    if (!this.needsCollision) return;
 
     const frozen = this.fsm.is('frozen');
     if (!frozen) this.pos.addScaledVector(this.kb, dt);
     this.kb.multiplyScalar(Math.pow(ENEMY.knockbackDecay, dt));
-    this.world.collision.collide(this.pos, this.arch.radius);
     if (!frozen) this.walk += dt * this.moving * this.speed * ENEMY.walkCycle;
   }
 
@@ -264,6 +274,12 @@ export class EnemyManager {
     // De atrás para adelante: un enemigo puede quitarse a sí mismo del arreglo.
     for (let i = this.active.length - 1; i >= 0; i--) this.active[i]?.step(dt);
     this.separate();
+    // La separación va antes de resolver la colisión: así el controller siempre parte de una
+    // posición válida y ningún enemigo queda empujado dentro de una columna.
+    const collision = this.world.collision;
+    for (const e of this.active) {
+      if (e.needsCollision && e.body) collision.moveCharacter(e.body, e.prevPos, e.pos);
+    }
   }
 
   /** Separación blanda entre enemigos y respecto del jugador, para que no se apilen. */
