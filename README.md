@@ -50,6 +50,8 @@ En desarrollo también aparece un panel de tuning (lil-gui, arriba a la derecha,
 defecto) que edita en vivo los valores de `src/data/`. Los cambios se pierden al recargar: para
 dejarlos fijos hay que pasarlos al archivo correspondiente.
 
+`F8` (en desarrollo o con `?debug`) salta directo a la oleada del jefe.
+
 ## Despliegue
 
 - El repo está conectado a Vercel con el preset de Vite (`npm run build`, salida `dist`).
@@ -71,6 +73,7 @@ Pide mouse y teclado.
 | Q               | Tirar el hacha (congela al que toca) |
 | Q o E           | Llamar al hacha de vuelta            |
 | Espacio         | Rodar (invulnerable mientras rodás)  |
+| Tab o rueda     | Fijar o soltar un objetivo           |
 | Esc             | Pausa                                |
 | M               | Silenciar                            |
 

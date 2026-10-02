@@ -7,6 +7,7 @@ const CONTROLS: [string, string][] = [
   ['Q', 'tirar el hacha, congela al que toca'],
   ['Q o E', 'llamar al hacha de vuelta'],
   ['Espacio', 'rodar, sos invulnerable mientras rodás'],
+  ['Tab o click del medio', 'fijar o soltar un objetivo'],
 ];
 
 export function renderControls(root: ParentNode): void {
