@@ -2,7 +2,8 @@ import { Vector3 } from 'three';
 import { COMBAT, type AttackDef } from '../data/attacks';
 import { PLAYER } from '../data/player';
 import type { World } from '../game/World';
-import { damageEnemy } from './damage';
+import { BOSS } from '../data/boss';
+import { damageBoss, damageEnemy } from './damage';
 
 const dir = new Vector3();
 const toTarget = new Vector3();
@@ -56,11 +57,38 @@ export function resolvePlayerAttack(world: World, def: AttackDef): void {
       heavy: def.heavy,
     });
 
-    if (!p.hitAny) {
-      p.hitAny = true;
-      world.feedback.hitStop(def.hitStop);
-      world.feedback.shake(def.shake);
-      world.events.emit('player:hit-landed', { heavy: def.heavy });
+    landed(world, def);
+  }
+
+  // El jefe: misma consulta, con su radio.
+  const boss = world.boss;
+  if (boss.canBeHit && !p.hitSet.has(boss)) {
+    const dx = boss.pos.x - cx;
+    const dz = boss.pos.z - cz;
+    const dist = Math.hypot(dx, dz) || 0.001;
+    const reach = baseReach * rangeMult + BOSS.radius * COMBAT.targetRadiusReach;
+    const inArc =
+      def.shape.kind !== 'arc' ||
+      dist <= COMBAT.arcMinDistance + BOSS.radius ||
+      (dx * fx + dz * fz) / dist >= def.shape.minDot;
+    if (dist <= reach && inArc) {
+      p.hitSet.add(boss);
+      const at = {
+        x: boss.pos.x - (dx / dist) * BOSS.radius,
+        y: BOSS.hitHeight * 0.5,
+        z: boss.pos.z - (dz / dist) * BOSS.radius,
+      };
+      if (damageBoss(world, def.damage * damageMult, def.breakDamage, at)) landed(world, def);
     }
   }
+}
+
+/** Hit-stop y temblor solo con el primer objetivo alcanzado por el ataque. */
+function landed(world: World, def: AttackDef): void {
+  const p = world.player;
+  if (p.hitAny) return;
+  p.hitAny = true;
+  world.feedback.hitStop(def.hitStop);
+  world.feedback.shake(def.shake);
+  world.events.emit('player:hit-landed', { heavy: def.heavy });
 }

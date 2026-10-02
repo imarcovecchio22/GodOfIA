@@ -11,6 +11,20 @@ export interface DamageOptions {
   heavy?: boolean;
 }
 
+/** Daño al jefe: súper armadura (sin empuje ni aturdimiento), llena el quiebre. */
+export function damageBoss(
+  world: World,
+  amount: number,
+  breakAmount: number,
+  at: { x: number; y: number; z: number },
+  slow = false,
+): boolean {
+  if (!world.boss.takeDamage(amount, breakAmount, slow)) return false;
+  world.events.emit('boss:hit', { x: at.x, y: at.y, z: at.z });
+  world.stats.registerHit();
+  return true;
+}
+
 /**
  * Aplica daño a un enemigo: vida, destello, empuje, aturdimiento y muerte.
  * Devuelve false si el enemigo no podía recibir daño (muerto o saliendo del piso).

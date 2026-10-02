@@ -1,8 +1,9 @@
 import { Vector3 } from 'three';
 import { Fsm, type StateTable } from '../ai/Fsm';
-import { damageEnemy } from '../combat/damage';
+import { damageBoss, damageEnemy } from '../combat/damage';
 import { ARENA } from '../data/arena';
 import { AXE } from '../data/axe';
+import { BOSS, BREAK_FROM_AXE } from '../data/boss';
 import { clamp } from '../core/math';
 import type { EnemySim } from './Enemy';
 import type { World } from '../game/World';
@@ -43,7 +44,7 @@ export class AxeSim {
   private readonly p1 = new Vector3();
   private readonly prev = new Vector3();
   private recallDuration = 0;
-  private readonly recallHits = new Set<EnemySim>();
+  private readonly recallHits = new Set<object>();
 
   constructor(private readonly world: World) {}
 
@@ -145,6 +146,22 @@ export class AxeSim {
       return undefined;
     }
 
+    // El jefe: no se congela, se ralentiza; el hacha rebota y cae a sus pies.
+    const boss = w.boss;
+    if (
+      boss.canBeHit &&
+      Math.hypot(p.x - boss.pos.x, p.z - boss.pos.z) < BOSS.radius + AXE.flightHitRadius &&
+      p.y < BOSS.height &&
+      p.y > 0
+    ) {
+      damageBoss(w, AXE.flightDamage, BREAK_FROM_AXE.flight, { x: p.x, y: p.y, z: p.z }, true);
+      w.feedback.hitStop(AXE.flightHitStop);
+      w.feedback.shake(AXE.flightShake);
+      w.events.emit('axe:hit', undefined);
+      this.drop();
+      return undefined;
+    }
+
     // Raycast del tramo recorrido en este paso: se clava justo en la superficie.
     const hit = w.collision.castSolid(this.prevPos, p);
     if (hit >= 0) {
@@ -205,6 +222,19 @@ export class AxeSim {
       this.recallHits.add(e);
       flatDir.copy(delta).setY(0).normalize();
       damageEnemy(w, e, AXE.recallDamage, flatDir, AXE.recallKnockback, { x: p.x, y: p.y, z: p.z });
+      w.feedback.shake(AXE.recallShake);
+      w.events.emit('axe:hit', undefined);
+    }
+
+    const boss = w.boss;
+    if (
+      boss.canBeHit &&
+      !this.recallHits.has(boss) &&
+      Math.hypot(p.x - boss.pos.x, p.z - boss.pos.z) < BOSS.radius + AXE.recallHitRadius &&
+      p.y < BOSS.height
+    ) {
+      this.recallHits.add(boss);
+      damageBoss(w, AXE.recallDamage, BREAK_FROM_AXE.recall, { x: p.x, y: p.y, z: p.z });
       w.feedback.shake(AXE.recallShake);
       w.events.emit('axe:hit', undefined);
     }

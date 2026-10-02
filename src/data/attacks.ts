@@ -42,6 +42,8 @@ export interface AttackDef {
   shake: number;
   /** Golpe pesado: rompe la súper armadura (aturde a los brutos) y suena más fuerte. */
   heavy: boolean;
+  /** Cuánto llena el medidor de quiebre del jefe. */
+  breakDamage: number;
   /** Si está, pega una sola vez en `impact.at` en vez de durante toda la ventana. */
   impact?: ImpactDef;
 }
@@ -73,6 +75,7 @@ export const LIGHT_COMBO: AttackDef[] = [
     hitStop: 0.05,
     shake: 0.22,
     heavy: false,
+    breakDamage: 6,
   },
   {
     id: 'light2',
@@ -85,6 +88,7 @@ export const LIGHT_COMBO: AttackDef[] = [
     hitStop: 0.05,
     shake: 0.22,
     heavy: false,
+    breakDamage: 6,
   },
   {
     id: 'light3',
@@ -98,6 +102,7 @@ export const LIGHT_COMBO: AttackDef[] = [
     shake: 0.42,
     // En el prototipo el tercer golpe también aturde a los brutos.
     heavy: true,
+    breakDamage: 12,
   },
 ];
 
@@ -112,6 +117,7 @@ export const HEAVY: AttackDef = {
   hitStop: 0.1,
   shake: 0.7,
   heavy: true,
+  breakDamage: 24,
   impact: { at: 0.43, shake: 0.35, ringRadius: 3.4, ringDuration: 0.4 },
 };
 

@@ -4,6 +4,7 @@ import { ARENA } from '../data/arena';
 import { ARCHETYPES, ENEMY, type EnemyArchetype, type EnemyKind } from '../data/enemies';
 import { PHYSICS } from '../data/physics';
 import { PLAYER } from '../data/player';
+import { BOSS } from '../data/boss';
 import { damp, lerpAngle } from '../core/math';
 import type { CharacterBody } from '../game/collision';
 import type { World } from '../game/World';
@@ -321,6 +322,18 @@ export class EnemyManager {
       if (d < min && d > 1e-4 && !aFrozen) {
         a.pos.x += (dx / d) * (min - d);
         a.pos.z += (dz / d) * (min - d);
+      }
+      // Nadie atraviesa al jefe.
+      const boss = this.world.boss;
+      if (boss.active && !aFrozen) {
+        const bx = a.pos.x - boss.pos.x;
+        const bz = a.pos.z - boss.pos.z;
+        const bd = Math.hypot(bx, bz);
+        const bmin = a.arch.radius + BOSS.radius;
+        if (bd < bmin && bd > 1e-4) {
+          a.pos.x += (bx / bd) * (bmin - bd);
+          a.pos.z += (bz / bd) * (bmin - bd);
+        }
       }
     }
   }

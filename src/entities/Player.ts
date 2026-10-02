@@ -5,12 +5,20 @@ import { HEAVY, LIGHT_COMBO, THROW, type AttackDef } from '../data/attacks';
 import { PHYSICS } from '../data/physics';
 import { PLAYER } from '../data/player';
 import { damp, lerpAngle } from '../core/math';
-import type { EnemySim } from './Enemy';
 import type { CharacterBody } from '../game/collision';
 import type { World } from '../game/World';
 
 export type PlayerState =
-  'idle' | 'move' | 'attack' | 'heavy' | 'throw' | 'dodge' | 'hurt' | 'dead';
+  | 'idle'
+  | 'move'
+  | 'attack'
+  | 'heavy'
+  | 'throw'
+  | 'dodge'
+  | 'hurt'
+  /** Arrastrado por el garfio del jefe: sin control hasta llegar. */
+  | 'pulled'
+  | 'dead';
 
 /** Intención del jugador en un paso de simulación. Los "pressed" valen solo para ese paso. */
 export interface PlayerInput {
@@ -49,6 +57,7 @@ const STATES: StateTable<PlayerState, PlayerSim> = {
   throw: { update: (p, dt) => p.updateAction(dt) },
   dodge: { update: (p, dt) => p.updateDodge(dt) },
   hurt: { update: (p) => (p.fsm.t > PLAYER.hurtDuration ? 'idle' : undefined) },
+  pulled: { update: (p) => p.updatePull() },
   dead: {},
 };
 
@@ -83,13 +92,17 @@ export class PlayerSim {
   heavyQueued = false;
   /** Ataque cuerpo a cuerpo en curso (null durante el lanzamiento). */
   attack: AttackDef | null = null;
-  readonly hitSet = new Set<EnemySim>();
+  /** Objetivos (enemigos o jefe) ya alcanzados por el ataque en curso. */
+  readonly hitSet = new Set<object>();
   hitAny = false;
   swung = false;
   impacted = false;
   released = false;
 
   private readonly body: CharacterBody;
+  private readonly pullFrom = new Vector3();
+  private readonly pullTo = new Vector3();
+  private pullDuration = 0;
 
   constructor(private readonly world: World) {
     this.body = world.collision.createCharacter(PLAYER.radius, PHYSICS.characterHeight);
@@ -332,12 +345,18 @@ export class PlayerSim {
     return undefined;
   }
 
-  /** Recibe un golpe. `big` = empuje y temblor fuertes (brutos). */
-  hurt(damage: number, dir: Vector3, big: boolean): void {
-    if (!this.alive || this.fsm.is('dodge') || this.invuln > 0) return;
+  /**
+   * Recibe un golpe. `big` = temblor fuerte; el empuje es el de la tabla del jugador salvo que el
+   * golpe traiga el suyo (el jefe). Devuelve true si el golpe entró.
+   */
+  hurt(damage: number, dir: Vector3, big: boolean, knockback?: number): boolean {
+    if (!this.alive || this.fsm.is('dodge') || this.invuln > 0) return false;
     this.hp -= damage;
     this.invuln = PLAYER.invulnAfterHit;
-    this.kb.addScaledVector(dir, big ? PLAYER.hurtKnockbackBig : PLAYER.hurtKnockback);
+    this.kb.addScaledVector(
+      dir,
+      knockback ?? (big ? PLAYER.hurtKnockbackBig : PLAYER.hurtKnockback),
+    );
     this.queued = false;
     this.heavyQueued = false;
     this.fsm.go('hurt', this);
@@ -345,12 +364,53 @@ export class PlayerSim {
     this.world.feedback.hitStop(PLAYER.hurtHitStop);
     this.world.stats.resetCombo();
     this.world.events.emit('player:hurt', { x: this.pos.x, y: 1.3, z: this.pos.z, big });
-    if (this.hp <= 0) {
-      this.hp = 0;
-      this.fsm.go('dead', this);
-      this.deathTimer = PLAYER.deathDelay;
-      this.world.events.emit('player:died', undefined);
-    }
+    if (this.hp <= 0) this.die();
+    return true;
+  }
+
+  private die(): void {
+    this.hp = 0;
+    this.fsm.go('dead', this);
+    this.deathTimer = PLAYER.deathDelay;
+    this.world.events.emit('player:died', undefined);
+  }
+
+  /** Daño continuo (frío, grieta de hielo): no aturde, no empuja y no respeta la invulnerabilidad. */
+  damageOverTime(amount: number): void {
+    if (!this.alive) return;
+    this.hp -= amount;
+    if (this.hp <= 0) this.die();
+  }
+
+  /** Puede ser enganchado por el garfio: todo menos rodando o muerto. */
+  get canBeGrabbed(): boolean {
+    return this.alive && !this.fsm.is('dodge');
+  }
+
+  /** Arrastra al jugador hasta (x, z) en `duration` segundos, sin control. */
+  pull(x: number, z: number, duration: number): boolean {
+    if (!this.canBeGrabbed) return false;
+    this.pullFrom.copy(this.pos);
+    this.pullTo.set(x, 0, z);
+    this.pullDuration = duration;
+    this.queued = false;
+    this.heavyQueued = false;
+    this.vel.set(0, 0, 0);
+    this.fsm.go('pulled', this);
+    return true;
+  }
+
+  updatePull(): PlayerState | undefined {
+    const u = Math.min(this.fsm.t / this.pullDuration, 1);
+    this.pos.lerpVectors(this.pullFrom, this.pullTo, 1 - (1 - u) * (1 - u));
+    return u >= 1 ? 'idle' : undefined;
+  }
+
+  /** Desplaza al jugador respetando el escenario (lo usa el jefe para no superponerse). */
+  displace(dx: number, dz: number): void {
+    target.set(this.pos.x + dx, 0, this.pos.z + dz);
+    this.world.collision.moveCharacter(this.body, this.pos, target);
+    this.pos.copy(target);
   }
 
   heal(amount: number): void {

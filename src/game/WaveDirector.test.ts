@@ -28,19 +28,20 @@ describe('Oleadas', () => {
   it('spawnea todos los brutos de la oleada', () => {
     const { world } = makeWorld(7);
     world.waves.reset();
-    world.waves.wave = 4;
+    // La 5 es de jefe: se prueba la 7 (3 brutos).
+    world.waves.wave = 6;
     world.waves.between = 0;
     let brutes = 0;
     world.events.on('enemy:spawned', ({ enemy }) => {
       if (enemy.arch.kind === 'brute') brutes++;
     });
     tick(world, 1);
-    expect(world.waves.wave).toBe(5);
+    expect(world.waves.wave).toBe(7);
     for (let i = 0; i < 3000 && world.waves.toSpawn > 0; i++) {
       tick(world, 1);
       for (const e of [...world.enemies.active]) if (e.alive) world.enemies.kill(e);
     }
-    expect(brutes).toBe(waveComposition(5).brutes);
+    expect(brutes).toBe(waveComposition(7).brutes);
   });
 
   it('al limpiar una oleada cura 20 y da 3 s de respiro', () => {

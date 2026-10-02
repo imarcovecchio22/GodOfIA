@@ -2,12 +2,15 @@ import { Vector3 } from 'three';
 import { EventBus } from '../core/EventBus';
 import { Rng } from '../core/Rng';
 import { AxeSim } from '../entities/Axe';
+import { BossSim } from '../entities/Boss';
 import { EnemyManager } from '../entities/Enemy';
 import { Orbs } from '../entities/Orbs';
-import { PlayerSim, type PlayerInput } from '../entities/Player';
+import { NO_INPUT, PlayerSim, type PlayerInput } from '../entities/Player';
 import type { Collision } from './collision';
 import type { Feedback, GameEvents } from './events';
+import { Hazards } from './Hazards';
 import { Stats } from './Stats';
+import { Telegraphs } from './Telegraphs';
 import { WaveDirector } from './WaveDirector';
 
 /**
@@ -23,6 +26,11 @@ export class World {
   readonly enemies: EnemyManager;
   readonly orbs: Orbs;
   readonly waves: WaveDirector;
+  readonly boss: BossSim;
+  readonly telegraphs = new Telegraphs();
+  readonly hazards: Hazards;
+  /** Durante la cinemática del jefe el jugador no controla al personaje. */
+  cinematic = false;
 
   /** Yaw de la cámara: define hacia dónde es "adelante" para el movimiento y la mira. */
   camYaw = 0;
@@ -42,6 +50,8 @@ export class World {
     this.enemies = new EnemyManager(this);
     this.orbs = new Orbs(this);
     this.waves = new WaveDirector(this);
+    this.boss = new BossSim(this);
+    this.hazards = new Hazards(this);
 
     this.events.on('enemy:killed', ({ enemy }) => {
       this.axe.onEnemyKilled(enemy);
@@ -50,6 +60,10 @@ export class World {
   }
 
   reset(): void {
+    this.boss.reset();
+    this.telegraphs.clear();
+    this.hazards.clear();
+    this.cinematic = false;
     this.enemies.clear();
     this.orbs.clear();
     this.player.reset();
@@ -65,10 +79,14 @@ export class World {
     this.player.snapshot();
     this.axe.snapshot();
     this.enemies.snapshot();
+    this.boss.snapshot();
 
-    this.player.step(dt, input);
+    this.player.step(dt, this.cinematic ? NO_INPUT : input);
     this.axe.fsm.update(this.axe, dt);
     this.enemies.step(dt);
+    this.telegraphs.step(dt);
+    this.boss.step(dt);
+    this.hazards.step(dt);
     this.orbs.step(dt);
 
     if (this.player.alive) {

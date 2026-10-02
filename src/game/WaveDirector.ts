@@ -1,3 +1,4 @@
+import { BOSS } from '../data/boss';
 import { WAVES } from '../data/waves';
 import type { World } from './World';
 
@@ -7,6 +8,11 @@ export function waveComposition(wave: number): { total: number; brutes: number }
     total: WAVES.countBase + WAVES.countPerWave * wave,
     brutes: Math.floor((wave - WAVES.bruteWaveOffset) / WAVES.bruteWaveDivisor),
   };
+}
+
+/** Cada `waveInterval` oleadas (5, 10, 15…) la oleada es de jefe. */
+export function isBossWave(wave: number): boolean {
+  return wave > 0 && wave % BOSS.waveInterval === 0;
 }
 
 export function maxAlive(wave: number): number {
@@ -40,12 +46,30 @@ export class WaveDirector {
 
   private startWave(): void {
     this.wave++;
+    this.cleared = false;
+    if (isBossWave(this.wave)) {
+      // Oleada de jefe: solo el Jarl (y lo que invoque). La numeración sigue igual.
+      this.toSpawn = 0;
+      this.brutesLeft = 0;
+      this.world.events.emit('wave:start', { wave: this.wave, boss: true });
+      this.world.boss.spawn(this.wave / BOSS.waveInterval);
+      return;
+    }
     const { total, brutes } = waveComposition(this.wave);
     this.toSpawn = total;
     this.brutesLeft = brutes;
     this.spawnTimer = WAVES.firstSpawnDelay;
-    this.cleared = false;
-    this.world.events.emit('wave:start', { wave: this.wave });
+    this.world.events.emit('wave:start', { wave: this.wave, boss: false });
+  }
+
+  /** Atajo de desarrollo: la próxima oleada que empieza es la `wave`. */
+  jumpTo(wave: number): void {
+    this.world.enemies.clear();
+    this.world.boss.reset();
+    this.wave = wave - 1;
+    this.toSpawn = 0;
+    this.cleared = true;
+    this.between = 0;
   }
 
   step(dt: number): void {
@@ -61,7 +85,7 @@ export class WaveDirector {
         this.toSpawn--;
         this.spawnTimer = w.rng.range(WAVES.spawnIntervalMin, WAVES.spawnIntervalMax);
       }
-    } else if (alive === 0) {
+    } else if (alive === 0 && !w.boss.active) {
       if (!this.cleared && this.wave > 0) {
         this.cleared = true;
         w.player.heal(WAVES.clearHeal);
