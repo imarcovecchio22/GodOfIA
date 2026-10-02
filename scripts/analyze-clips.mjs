@@ -15,7 +15,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const [onlyChar, onlyClip] = process.argv.slice(2);
-const ATTACKS = /Attack|Throw|Spawn|Death|Hit|Dodge/;
+const ATTACKS = /Attack|Throw|Spawn|Death|Hit|Dodge|Spellcast|PickUp|Jump|Taunt/;
 
 await MeshoptDecoder.ready;
 const io = new NodeIO()
@@ -38,7 +38,7 @@ async function loadForNode(file) {
   });
 }
 
-for (const name of ['barbarian', 'draugr', 'brute']) {
+for (const name of ['barbarian', 'draugr', 'brute', 'jarl']) {
   if (onlyChar && name !== onlyChar) continue;
   const gltf = await loadForNode(join(ROOT, 'src', 'assets', 'models', `${name}.glb`));
   const scene = gltf.scene;

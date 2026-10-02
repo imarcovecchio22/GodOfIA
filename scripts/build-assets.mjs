@@ -94,6 +94,37 @@ const CHARACTERS = [
     clips: [...SKELETON_CLIPS, '2H_Melee_Attack_Chop'],
     rootMotion: ['Spawn_Ground_Skeletons', 'Death_C_Skeletons'],
   },
+  {
+    // El Jarl Ahogado (fase 5): el guerrero esqueleto sin casco (lleva una corona propia que se
+    // cuelga en la vista), con el hacha del pack y los clips de cada estado del jefe.
+    out: 'jarl',
+    pack: 'skeletons',
+    file: 'Characters/gltf/Skeleton_Warrior.glb',
+    remove: ['Skeleton_Warrior_Helmet'],
+    separate: ['Skeleton_Warrior_Eyes'],
+    attach: [{ file: 'Assets/gltf/Skeleton_Axe.gltf', bone: 'handslot.r' }],
+    clips: [
+      '2H_Melee_Idle',
+      'Walking_D_Skeletons',
+      'Running_B',
+      '2H_Melee_Attack_Slice',
+      '2H_Melee_Attack_Chop',
+      '2H_Melee_Attack_Stab',
+      '1H_Melee_Attack_Slice_Diagonal',
+      '1H_Melee_Attack_Slice_Horizontal',
+      'Throw',
+      'Spellcast_Summon',
+      'Taunt_Longer',
+      'PickUp',
+      'Hit_B',
+      'Jump_Start',
+      'Jump_Idle',
+      'Jump_Land',
+      'Spawn_Ground_Skeletons',
+      'Death_C_Skeletons',
+    ],
+    rootMotion: ['Spawn_Ground_Skeletons', 'Death_C_Skeletons'],
+  },
 ];
 
 // ───────────────────────── Descarga con caché ─────────────────────────
