@@ -7,6 +7,7 @@
  * `node scripts/analyze-clips.mjs` (pico de velocidad de la mano, o el punto donde frena contra el
  * piso en los golpes de arriba hacia abajo).
  */
+import type { BossAttackId } from './boss';
 import type { EnemyKind } from './enemies';
 
 export interface ClipRef {
@@ -166,4 +167,74 @@ export interface AnimationTiming {
 export const ANIMATION: AnimationTiming = {
   enemyContactDelay: 0.14,
   shadowDistance: 14,
+};
+
+/** Un golpe del jefe: el clip y su cuadro de contacto (medido con `analyze-clips.mjs`). */
+export interface BossModel extends CharacterModel {
+  eyesNode: string;
+  idle: string;
+  walk: string;
+  walkClipSpeed: number;
+  /** Clip por ataque y por golpe (la furia triple tiene tres). */
+  strikes: Record<BossAttackId, ClipRef[]>;
+  /** Embestida: la carga es el comienzo de la estocada; el recorrido, una carrera. */
+  chargeRun: string;
+  chargeRunTimeScale: number;
+  transition: string;
+  /** De rodillas por el quiebre: el cuadro más bajo de levantar algo del piso. */
+  kneel: ClipRef;
+  /** Segundos que tarda en llegar a la pose de rodillas y en volver a pararse. */
+  kneelIn: number;
+  kneelOut: number;
+  stunned: string;
+  leapStart: string;
+  leapIdle: string;
+  leapLand: string;
+  landDuration: number;
+  emerge: string;
+  /** Segundo del clip de aparición en que ya está parado. */
+  emergeEnd: number;
+  death: string;
+  /** Piezas propias colgadas de los huesos (Three saca los puntos: 'lowerarm.l' → 'lowerarml'). */
+  bones: { head: string; chest: string; chainArm: string };
+}
+
+export const BOSS_MODEL: BossModel = {
+  file: 'jarl',
+  scale: 3.2,
+  // Hueso lavado por el agua del lago.
+  tint: 0x9fb8b2,
+  actionFade: 0.12,
+  locomotionFade: 0.25,
+  eyesNode: 'Skeleton_Warrior_Eyes',
+  idle: '2H_Melee_Idle',
+  walk: 'Walking_D_Skeletons',
+  walkClipSpeed: 1.1,
+  strikes: {
+    sweep: [{ clip: '2H_Melee_Attack_Slice', contact: 0.375 }],
+    hammer: [{ clip: '2H_Melee_Attack_Chop', contact: 0.8 }],
+    charge: [{ clip: '2H_Melee_Attack_Stab', contact: 0.375 }],
+    summon: [{ clip: 'Spellcast_Summon', contact: 2.9 }],
+    hook: [{ clip: 'Throw', contact: 0.7 }],
+    fury: [
+      { clip: '1H_Melee_Attack_Slice_Diagonal', contact: 0.375 },
+      { clip: '1H_Melee_Attack_Slice_Horizontal', contact: 0.242 },
+      { clip: '2H_Melee_Attack_Chop', contact: 0.8 },
+    ],
+  },
+  chargeRun: 'Running_B',
+  chargeRunTimeScale: 2.2,
+  transition: 'Taunt_Longer',
+  kneel: { clip: 'PickUp', contact: 0.567 },
+  kneelIn: 0.35,
+  kneelOut: 0.5,
+  stunned: 'Hit_B',
+  leapStart: 'Jump_Start',
+  leapIdle: 'Jump_Idle',
+  leapLand: 'Jump_Land',
+  landDuration: 0.5,
+  emerge: 'Spawn_Ground_Skeletons',
+  emergeEnd: 2.67,
+  death: 'Death_C_Skeletons',
+  bones: { head: 'head', chest: 'chest', chainArm: 'lowerarml' },
 };

@@ -1,9 +1,10 @@
 import barbarian from './models/barbarian.glb?url';
 import brute from './models/brute.glb?url';
 import draugr from './models/draugr.glb?url';
+import jarl from './models/jarl.glb?url';
 
 /** URLs con hash de los modelos (Vite los emite en /assets/, cacheados como immutable). */
-export const MODEL_URLS = { barbarian, draugr, brute } as const;
+export const MODEL_URLS = { barbarian, draugr, brute, jarl } as const;
 
 const audioModules = import.meta.glob<string>('./audio/*.mp3', {
   query: '?url',

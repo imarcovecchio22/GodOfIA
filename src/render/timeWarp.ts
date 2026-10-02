@@ -24,3 +24,11 @@ export function impactTimeOf(def: {
 }): number {
   return def.impact?.at ?? (def.active[0] + def.active[1]) / 2;
 }
+
+/**
+ * Impacto de un golpe del jefe, contado desde el inicio de la carga: los golpes que pegan una vez
+ * (martillazo, garfio, invocación) conectan al empezar la ventana; los barridos, en el medio.
+ */
+export function bossImpactTime(windup: number, active: number, instant: boolean): number {
+  return windup + (instant ? 0 : active / 2);
+}

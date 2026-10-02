@@ -27,16 +27,18 @@ const loader = new AssetLoader((f) => {
 });
 let assets;
 try {
-  const [rapier, player, draugr, brute] = await Promise.all([
+  const [rapier, player, draugr, brute, jarl] = await Promise.all([
     loader.task(loadRapier()),
     loader.gltfModel(MODEL_URLS.barbarian),
     loader.gltfModel(MODEL_URLS.draugr),
     loader.gltfModel(MODEL_URLS.brute),
+    loader.gltfModel(MODEL_URLS.jarl),
   ]);
   assets = {
     rapier,
     player: prepareTemplate(player),
     enemies: { draugr: prepareTemplate(draugr), brute: prepareTemplate(brute) },
+    boss: prepareTemplate(jarl),
   };
 } catch (err: unknown) {
   if (loadingTxt) loadingTxt.textContent = 'No se pudo cargar el juego. Recargá la página.';

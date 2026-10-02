@@ -40,6 +40,7 @@ export interface GameAssets {
   rapier: Rapier;
   player: CharacterTemplate;
   enemies: Record<EnemyKind, CharacterTemplate>;
+  boss: CharacterTemplate;
 }
 
 const LOCK_FALLBACK_MS = 500;
@@ -95,6 +96,7 @@ export class Game {
   private audioLoading = false;
   /** Segundos reales que quedan de la cámara lenta de la muerte del jefe. */
   private slowMo = 0;
+  private readonly crack = { x: 0, z: 0, progress: 0 };
   /** La entrada del jefe se puede saltear si ya se vio alguna vez. */
   private introSkippable = false;
 
@@ -126,7 +128,7 @@ export class Game {
     this.axeView = new AxeView(this.scene, this.playerView);
     this.enemyViews = new EnemyViews(this.scene, assets.enemies);
     this.orbViews = new OrbViews(this.scene);
-    this.bossView = new BossView(this.scene);
+    this.bossView = new BossView(this.scene, assets.boss);
     this.decals = new DecalViews(this.scene);
     this.fx = new FxDirector(this.scene, this.world);
     this.hud = new Hud(this.world);
@@ -221,8 +223,14 @@ export class Game {
     this.axeView.update(w.axe, alpha, now);
     this.enemyViews.update(alpha, simDt, this.playerView.root.position);
     this.orbViews.update(w.orbs, simDt);
-    this.bossView.update(w.boss, alpha, simDt, now);
-    this.decals.update(w.telegraphs, w.hazards, now);
+    this.bossView.update(w.boss, alpha, simDt, this.playerView.root.position);
+    const b = w.boss;
+    if (b.state === 'emerge') {
+      this.crack.x = b.pos.x;
+      this.crack.z = b.pos.z;
+      this.crack.progress = b.fsm.t / BOSS.emergeDuration;
+    }
+    this.decals.update(w.telegraphs, w.hazards, now, b.state === 'emerge' ? this.crack : null);
     this.fx.update(simDt);
     this.arena.update(realDt, now);
 

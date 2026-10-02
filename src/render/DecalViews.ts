@@ -121,6 +121,7 @@ interface Slot {
 
 const geo = new PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
 const tmpColor = new Color();
+const crackShape = { kind: 'circle' as const, radius: 0 };
 
 /** Avisos y zonas de peligro dibujados en el piso, con pool fijo. Solo lee la simulación. */
 export class DecalViews {
@@ -149,8 +150,21 @@ export class DecalViews {
     }
   }
 
-  update(telegraphs: Telegraphs, hazards: Hazards, time: number): void {
+  /**
+   * `crack`: grieta que se abre en el piso mientras emerge el jefe (`progress` de 0 a 1). Usa el
+   * estilo de la grieta de hielo con un radio que crece.
+   */
+  update(
+    telegraphs: Telegraphs,
+    hazards: Hazards,
+    time: number,
+    crack: { x: number; z: number; progress: number } | null = null,
+  ): void {
     this.used = 0;
+    if (crack) {
+      crackShape.radius = DECALS.crackRadius * Math.min(1, crack.progress * 1.6);
+      this.draw(crackShape, crack.x, crack.z, 0, 0, 'burn', DECALS.burn, time);
+    }
     for (const h of hazards.pool) {
       if (!h.active) continue;
       const style = h.kind === 'burn' ? DECALS.burn : DECALS.cold;

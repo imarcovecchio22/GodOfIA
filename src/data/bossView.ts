@@ -4,23 +4,33 @@
  */
 
 export const BOSS_LOOK = {
-  bone: 0x8d8a7c,
-  rust: 0x5b3a26,
+  rust: 0x8a5634,
   iron: 0x3c4148,
   algae: 0x2f4a3a,
+  ice: 0xbfefff,
   /** Fuego azul de ojos y pecho, en HDR para que lo agarre el bloom. */
   fire: 0x4fb8ff,
   fireGlow: [1.6, 2.6, 3.8] as [number, number, number],
   /** Blanco del destello al recibir un golpe. */
   flashGlow: 1.4,
-  /** Suavizado de las poses (1/s). */
-  poseDamp: 14,
   /** Altura del salto del juicio del lago: sale de cuadro. */
   leapHeight: 34,
-  /** Cuánto se hunde al arrodillarse por el quiebre. */
-  kneelDrop: 1.3,
-  /** Profundidad desde la que emerge y a la que se hunde al morir. */
-  sinkDepth: 7,
+  /** Al morir: el esqueleto se desarma en `deathClipTime` y después se hunde `sinkDepth`. */
+  deathClipTime: 1.6,
+  sinkDelay: 1.8,
+  sinkDepth: 3,
+  /** Piezas propias, en el espacio de cada hueso del modelo (antes de escalar). */
+  props: {
+    crownY: 0.64,
+    crownZ: 0,
+    crownRadius: 0.4,
+    beardY: 0.12,
+    beardZ: 0.26,
+    heartY: 0.12,
+    heartZ: 0.36,
+    heartRadius: 0.12,
+    chainX: 0.05,
+  },
 };
 
 /** Avisos en el piso (decals). Lo que se ve es exactamente el área que pega. */
@@ -38,6 +48,8 @@ export const DECALS = {
   edgeWidth: 0.14,
   /** El área exterior del frío se dibuja hasta acá (el resto queda fuera de la arena). */
   coldExtent: 26,
+  /** Radio final de la grieta por la que sale el jefe. */
+  crackRadius: 4.5,
 };
 
 export const LOCK_ON = {

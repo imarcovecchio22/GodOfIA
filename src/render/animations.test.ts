@@ -3,8 +3,10 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { HEAVY, LIGHT_COMBO, THROW } from '../data/attacks';
 import { ENEMY, ARCHETYPES } from '../data/enemies';
-import { ANIMATION, ENEMY_MODELS, PLAYER_MODEL, type ClipRef } from '../data/models';
-import { impactTimeOf, warpTime } from './timeWarp';
+import { BOSS, BOSS_ATTACKS } from '../data/boss';
+import { ANIMATION, BOSS_MODEL, ENEMY_MODELS, PLAYER_MODEL, type ClipRef } from '../data/models';
+import { effectiveRecover, effectiveWindup } from '../entities/Boss';
+import { bossImpactTime, impactTimeOf, warpTime } from './timeWarp';
 
 const STEP = 1 / 60;
 
@@ -122,4 +124,52 @@ describe('Clips de enemigos', () => {
       expect(t).toBeLessThanOrEqual(ENEMY.attackHitEnd + STEP);
     });
   }
+});
+
+describe('Clips del jefe', () => {
+  const M = BOSS_MODEL;
+  const durations = clipDurations(M.file);
+
+  it('todos los clips referenciados existen en el GLB', () => {
+    const names = [
+      M.idle,
+      M.walk,
+      M.chargeRun,
+      M.transition,
+      M.kneel.clip,
+      M.stunned,
+      M.leapStart,
+      M.leapIdle,
+      M.leapLand,
+      M.emerge,
+      M.death,
+      ...Object.values(M.strikes).flatMap((refs) => refs.map((r) => r.clip)),
+    ];
+    for (const n of names) expect(durations.has(n), n).toBe(true);
+    expect(M.emergeEnd).toBeLessThan(durations.get(M.emerge) ?? 0);
+    expect(M.kneel.contact).toBeLessThan(durations.get(M.kneel.clip) ?? 0);
+  });
+
+  it('cada golpe tiene su clip y conecta en la ventana de daño, en todas las fases', () => {
+    for (const a of BOSS_ATTACKS) {
+      const refs = M.strikes[a.id];
+      expect(refs.length, a.id).toBe(a.strikes.length);
+      a.strikes.forEach((s, i) => {
+        const ref = refs[i];
+        if (!ref) throw new Error(`sin clip para ${a.id} ${i}`);
+        const duration = durations.get(ref.clip) ?? 0;
+        expect(ref.contact, a.id).toBeLessThan(duration);
+        for (const phase of [1, 2, 3] as const) {
+          const windup = effectiveWindup(s, phase);
+          const total = windup + s.active + effectiveRecover(s, phase);
+          const instant = s.anchor === 'target' || a.special !== undefined;
+          const impact = bossImpactTime(windup, s.active, instant);
+          const t = contactTick(impact, total, ref, duration) * STEP;
+          expect(t, `${a.id} ${i} fase ${phase}`).toBeGreaterThanOrEqual(windup - STEP);
+          expect(t, `${a.id} ${i} fase ${phase}`).toBeLessThanOrEqual(windup + s.active + STEP);
+        }
+      });
+    }
+    expect(BOSS.minWindup).toBeGreaterThan(0);
+  });
 });
