@@ -6,6 +6,8 @@ import { Input } from './core/Input';
 import { Loop } from './core/Loop';
 import { Time } from './core/Time';
 import { CAMERA } from './data/camera';
+import { BOSS } from './data/boss';
+import { CINEMATIC, LOCK_ON } from './data/bossView';
 import { NO_INPUT } from './entities/Player';
 import { FxDirector } from './fx/FxDirector';
 import { World } from './game/World';
@@ -14,6 +16,9 @@ import type { Rapier } from './physics/rapier';
 import type { CharacterTemplate } from './render/characters';
 import type { EnemyKind } from './data/enemies';
 import { AxeView } from './render/AxeView';
+import { BossView } from './render/BossView';
+import { DecalViews } from './render/DecalViews';
+import { TargetLock, lockPoint } from './render/TargetLock';
 import { CameraRig } from './render/CameraRig';
 import type { DebugOverlay } from './render/DebugOverlay';
 import { EnemyViews } from './render/EnemyViews';
@@ -39,6 +44,22 @@ export interface GameAssets {
 
 const LOCK_FALLBACK_MS = 500;
 
+function loadFlag(key: string): boolean {
+  try {
+    return localStorage.getItem(key) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function saveFlag(key: string): void {
+  try {
+    localStorage.setItem(key, '1');
+  } catch {
+    // Sin storage (modo privado): la entrada simplemente no se puede saltear.
+  }
+}
+
 function el(id: string): HTMLElement {
   const e = document.getElementById(id);
   if (!e) throw new Error(`Falta #${id} en index.html`);
@@ -63,12 +84,19 @@ export class Game {
   private readonly axeView: AxeView;
   private readonly enemyViews: EnemyViews;
   private readonly orbViews: OrbViews;
+  private readonly bossView: BossView;
+  private readonly decals: DecalViews;
+  readonly lock = new TargetLock();
   private readonly fx: FxDirector;
   private readonly hud: Hud;
   private readonly audioDirector: AudioDirector;
   private readonly tips: Tips;
   private readonly settingsScreen: SettingsScreen;
   private audioLoading = false;
+  /** Segundos reales que quedan de la cámara lenta de la muerte del jefe. */
+  private slowMo = 0;
+  /** La entrada del jefe se puede saltear si ya se vio alguna vez. */
+  private introSkippable = false;
 
   private mode: Mode = 'menu';
   private locked = false;
@@ -98,6 +126,8 @@ export class Game {
     this.axeView = new AxeView(this.scene, this.playerView);
     this.enemyViews = new EnemyViews(this.scene, assets.enemies);
     this.orbViews = new OrbViews(this.scene);
+    this.bossView = new BossView(this.scene);
+    this.decals = new DecalViews(this.scene);
     this.fx = new FxDirector(this.scene, this.world);
     this.hud = new Hud(this.world);
     const rig = this.cameraRig;
@@ -114,10 +144,19 @@ export class Game {
     this.world.events.on('enemy:removed', ({ enemy }) => {
       this.enemyViews.release(enemy);
     });
+    this.world.events.on('boss:intro', () => {
+      this.lock.clear();
+      this.introSkippable = loadFlag(CINEMATIC.seenKey);
+      saveFlag(CINEMATIC.seenKey);
+    });
+    this.world.events.on('boss:died', () => {
+      this.slowMo = BOSS.death.slowDuration;
+    });
 
     this.input = new Input(() => this.mode === 'play' && (this.locked || this.fallback));
-    this.input.onKeyDown = (code) => {
-      this.onKey(code);
+    this.input.onKeyDown = (code) => this.onKey(code);
+    this.input.onLockToggle = () => {
+      if (!this.world.cinematic) this.lock.toggle(this.world, this.cameraRig.yaw);
     };
     this.tips = new Tips(this.world);
     this.settingsScreen = new SettingsScreen(
@@ -159,7 +198,8 @@ export class Game {
       cam.yaw += realDt * CAMERA.menuOrbitSpeed;
     } else if (this.mode === 'play') {
       const { dx, dy } = this.input.consumeLook();
-      cam.look(dx, dy);
+      // Con un objetivo fijado (o en la cinemática), el giro horizontal lo maneja la cámara.
+      cam.look(this.lock.active || this.world.cinematic ? 0 : dx, dy);
     }
     this.world.camYaw = cam.yaw;
   }
@@ -181,11 +221,16 @@ export class Game {
     this.axeView.update(w.axe, alpha, now);
     this.enemyViews.update(alpha, simDt, this.playerView.root.position);
     this.orbViews.update(w.orbs, simDt);
+    this.bossView.update(w.boss, alpha, simDt, now);
+    this.decals.update(w.telegraphs, w.hazards, now);
     this.fx.update(simDt);
     this.arena.update(realDt, now);
 
+    this.updateSlowMo(realDt);
+    this.aimCamera(alpha);
     this.cameraRig.update(realDt, this.playerView.root.position);
     this.cameraRig.writeAim(w.aimOrigin, w.aimDir);
+    this.updateLockMarker();
     this.hud.update(realDt);
     this.tips.update(realDt);
     this.audioDirector.update();
@@ -193,6 +238,55 @@ export class Game {
 
     this.renderer.render(realDt);
     this.overlay?.update(realDt, this.renderer.gl, this.loop.lastSteps);
+  }
+
+  /** Cinemática del jefe o fijación de objetivo: la cámara mantiene el punto en cuadro. */
+  private aimCamera(alpha: number): void {
+    const w = this.world;
+    const cam = this.cameraRig;
+    this.lock.validate(w);
+    if (w.cinematic && this.mode === 'play') {
+      cam.focusing = true;
+      cam.focusPoint.copy(w.boss.pos);
+      cam.focusDamp = CINEMATIC.turnDamp;
+      cam.focusPitch = CINEMATIC.pitch;
+      cam.pullBack = CINEMATIC.pullBack;
+      cam.trauma = Math.max(cam.trauma, CINEMATIC.rumble);
+    } else {
+      cam.focusing = this.lock.focus(cam.focusPoint, alpha);
+      cam.focusDamp = LOCK_ON.turnDamp;
+      cam.focusPitch = null;
+      cam.pullBack = 0;
+    }
+    this.hud.setSkipHint(w.cinematic && this.introSkippable);
+  }
+
+  private updateLockMarker(): void {
+    if (!this.lock.active) {
+      this.hud.setLock(false, 0, 0);
+      return;
+    }
+    lockPoint.copy(this.cameraRig.focusPoint).project(this.cameraRig.camera);
+    const canvas = this.renderer.canvas;
+    const visible = lockPoint.z < 1;
+    this.hud.setLock(
+      visible,
+      ((lockPoint.x + 1) / 2) * canvas.clientWidth,
+      ((1 - lockPoint.y) / 2) * canvas.clientHeight,
+    );
+  }
+
+  /** La cámara lenta corre en tiempo real: la muerte del jefe se ve a 0,3 durante 1,5 s. */
+  private updateSlowMo(realDt: number): void {
+    if (this.slowMo <= 0) return;
+    this.slowMo -= realDt;
+    this.time.timeScale = this.slowMo > 0 ? BOSS.death.timeScale : 1;
+  }
+
+  /** Atajo de desarrollo: la próxima oleada es la del jefe. */
+  devJumpToBoss(): void {
+    this.world.waves.jumpTo(BOSS.waveInterval);
+    this.tips.toast('Saltando a la oleada del jefe');
   }
 
   /** Aplica y guarda las preferencias del jugador. */
@@ -214,6 +308,8 @@ export class Game {
     this.playerView.reset();
     this.cameraRig.reset(this.world.player.pos);
     this.hud.reset();
+    this.lock.clear();
+    this.slowMo = 0;
     this.input.clearPressed();
     this.time.reset();
   }
@@ -349,19 +445,25 @@ export class Game {
     }
   }
 
-  private onKey(code: string): void {
+  /** Devuelve true si la tecla quedó consumida. */
+  private onKey(code: string): boolean {
+    if (this.mode === 'play' && this.world.cinematic && this.introSkippable) {
+      this.world.boss.skipIntro();
+      return true;
+    }
     if (code === 'KeyM') {
       this.audio.toggleMute();
       this.tips.toast(this.audio.muted ? 'Sonido apagado (<kbd>M</kbd>)' : 'Sonido encendido');
-      return;
+      return false;
     }
     if (code === 'Escape' && this.settingsScreen.isOpen) {
       this.settingsScreen.close();
-      return;
+      return false;
     }
     if (code === 'Escape' && this.fallback) {
       if (this.mode === 'play') this.setMode('paused');
       else if (this.mode === 'paused') this.enterPlay();
     }
+    return false;
   }
 }

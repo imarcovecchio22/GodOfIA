@@ -1,5 +1,6 @@
 import type { Scene } from 'three';
-import { BURSTS, FX } from '../data/fx';
+import { BOSS_FX, BURSTS, FX } from '../data/fx';
+import { BOSS } from '../data/boss';
 import { HEAVY } from '../data/attacks';
 import type { World } from '../game/World';
 import { Particles } from './Particles';
@@ -48,6 +49,7 @@ export class FxDirector {
     ev.on('player:dodge', ({ x, y, z }) => P.burst(x, y, z, BURSTS.dodgeDust));
     ev.on('player:hurt', ({ x, y, z }) => P.burst(x, y, z, BURSTS.playerBlood));
     ev.on('player:healed', ({ x, y, z }) => P.burst(x, y, z, BURSTS.heal));
+    this.bindBoss();
     ev.on('player:slam', ({ x, z, armed }) => {
       const impact = HEAVY.impact;
       if (impact) {
@@ -60,6 +62,45 @@ export class FxDirector {
         );
       }
       P.burst(x, 0.1, z, BURSTS.slamDust);
+    });
+  }
+
+  private ring(x: number, z: number, r: { color: number; radius: number; duration: number }): void {
+    this.rings.spawn(x, z, r.color, r.radius, r.duration);
+  }
+
+  private bindBoss(): void {
+    const ev = this.world.events;
+    const P = this.particles;
+    const boss = this.world.boss;
+    ev.on('boss:intro', () => {
+      this.ring(boss.pos.x, boss.pos.z, BOSS_FX.emergeRing);
+      P.burst(boss.pos.x, 0.2, boss.pos.z, BURSTS.bossDust);
+    });
+    ev.on('boss:hit', ({ x, y, z }) => {
+      P.burst(x, y, z, BURSTS.bossHit);
+      P.burst(x, y, z, BURSTS.sparks);
+    });
+    ev.on('boss:strike', ({ attack, x, z }) => {
+      if (attack !== 'hammer') return;
+      this.ring(x, z, BOSS_FX.hammerRing);
+      P.burst(x, 0.2, z, BURSTS.bossIce);
+      P.burst(x, 0.2, z, BURSTS.slamDust);
+    });
+    ev.on('boss:stunned', ({ x, z }) => P.burst(x, 2.5, z, BURSTS.bossBreak));
+    ev.on('boss:broken', () => P.burst(boss.pos.x, BOSS.hitHeight, boss.pos.z, BURSTS.bossBreak));
+    ev.on('boss:phase', () => {
+      this.ring(boss.pos.x, boss.pos.z, BOSS_FX.phaseRing);
+      P.burst(boss.pos.x, BOSS.hitHeight, boss.pos.z, BURSTS.bossFire);
+    });
+    ev.on('boss:landed', ({ x, z }) => {
+      this.ring(x, z, BOSS_FX.landRing);
+      P.burst(x, 0.2, z, BURSTS.bossDust);
+      P.burst(x, 0.2, z, BURSTS.bossIce);
+    });
+    ev.on('boss:died', ({ x, y, z }) => {
+      P.burst(x, y, z, BURSTS.bossIce);
+      P.burst(x, y, z, BURSTS.bossFire);
     });
   }
 
@@ -83,6 +124,17 @@ export class FxDirector {
         e.pos.z + rand(-sp, sp),
         BURSTS.spawnTrickle,
       );
+    }
+    // El piso se rompe mientras emerge el jefe; al morir se desarma en hielo y fuego azul.
+    const b = w.boss;
+    if (b.state === 'emerge' && Math.random() < dt * BOSS_FX.emergeRate) {
+      const sp = BOSS_FX.emergeSpread;
+      const preset = Math.random() < 0.5 ? BURSTS.spawnTrickle : BURSTS.bossHit;
+      this.particles.burst(b.pos.x + rand(-sp, sp), 0.1, b.pos.z + rand(-sp, sp), preset);
+    } else if (b.state === 'dying' && Math.random() < dt * BOSS_FX.deathRate) {
+      const y = rand(0.5, BOSS.height) * Math.max(0, 1 - b.fsm.t / BOSS.death.duration);
+      const preset = Math.random() < 0.5 ? BURSTS.bossFire : BURSTS.freeze;
+      this.particles.burst(b.pos.x + rand(-1, 1), y, b.pos.z + rand(-1, 1), preset);
     }
     this.particles.update(dt);
     this.rings.update(dt);

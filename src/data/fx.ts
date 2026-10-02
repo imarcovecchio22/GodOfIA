@@ -42,6 +42,12 @@ export const BURSTS = {
   slamDust: burst(0x6b6355, 22, 7, { life: 0.7, size: 0.14, up: 1.4 }),
   playerBlood: burst(0x9a1a14, 10, 5),
   heal: burst(0x6dff9a, 14, 4, { life: 0.5, size: 0.08, gravity: -3 }),
+  // Jefe (fase 5).
+  bossHit: burst(0xbff4ff, 10, 6, { life: 0.4, size: 0.1, gravity: 6 }),
+  bossDust: burst(0x6b6355, 40, 9, { life: 0.9, size: 0.22, up: 2 }),
+  bossIce: burst(0xbff4ff, 30, 8, { life: 0.8, size: 0.14, up: 1.6 }),
+  bossFire: burst(0x4fb8ff, 26, 5, { life: 1.1, size: 0.12, gravity: -4 }),
+  bossBreak: burst(0xffc06a, 24, 8, { life: 0.5, size: 0.09, gravity: 4 }),
 } satisfies Record<string, BurstPreset>;
 
 export interface FxTuning {
@@ -82,4 +88,17 @@ export const FX: FxTuning = {
   spawnRingDuration: 0.6,
   slamRingArmed: 0x86e6f7,
   slamRingUnarmed: 0xe0a24c,
+};
+
+/** Ondas y ritmos de FX del jefe. */
+export const BOSS_FX = {
+  hammerRing: { color: 0x86e6f7, radius: 4.5, duration: 0.5 },
+  landRing: { color: 0x86e6f7, radius: 8, duration: 0.7 },
+  emergeRing: { color: 0x4fc6d8, radius: 7, duration: 1.2 },
+  phaseRing: { color: 0x4fb8ff, radius: 9, duration: 0.8 },
+  /** Partículas por segundo mientras emerge, en un radio de `emergeSpread`. */
+  emergeRate: 40,
+  emergeSpread: 2.2,
+  /** Explosiones en cadena durante la muerte (por segundo). */
+  deathRate: 10,
 };

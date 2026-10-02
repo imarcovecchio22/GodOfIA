@@ -1,9 +1,13 @@
+import { BOSS } from '../data/boss';
 import { PLAYER } from '../data/player';
+import { isBossWave } from '../game/WaveDirector';
 import type { World } from '../game/World';
 
 const CROSS_ICE_MS = 250;
 const GHOST_DRAIN = 30;
 const HURT_FLASH_DECAY = 2.5;
+/** La barra fantasma del jefe baja a esta fracción por segundo. */
+const BOSS_GHOST_DRAIN = 0.25;
 
 function el(id: string): HTMLElement {
   const e = document.getElementById(id);
@@ -31,6 +35,14 @@ export class Hud {
   private readonly banner = el('banner');
   private readonly vig = el('vig');
   private readonly lowhp = el('lowhp');
+  private readonly letterbox = el('letterbox');
+  private readonly bossBar = el('bossBar');
+  private readonly bossFill = el('bossFill');
+  private readonly bossGhost = el('bossGhost');
+  private readonly bossTitle = el('bossTitle');
+  private readonly skipHint = el('skipHint');
+  private readonly lockMark = el('lockMark');
+  private bossGhostHp = 1;
 
   private ghost: number = PLAYER.maxHp;
   private hurtFlash = 0;
@@ -50,12 +62,30 @@ export class Hud {
     ev.on('player:hurt', () => {
       this.hurtFlash = 1;
     });
-    ev.on('wave:start', ({ wave }) => {
-      this.showBanner(`Oleada ${wave}`);
+    ev.on('wave:start', ({ wave, boss }) => {
+      // En la oleada de jefe el cartel es su nombre, durante la entrada.
+      if (!boss) this.showBanner(`Oleada ${wave}`);
     });
-    ev.on('wave:cleared', () => {
-      this.showBanner('Oleada superada');
+    ev.on('wave:cleared', ({ wave }) => {
+      if (!isBossWave(wave)) this.showBanner('Oleada superada');
     });
+    ev.on('boss:intro', () => {
+      this.bossGhostHp = 1;
+      replay(this.bossTitle, 'show');
+    });
+    ev.on('boss:defeated', () => {
+      this.showBanner('Victoria');
+    });
+
+    el('bossName').textContent = BOSS.name;
+    el('bossTitleName').textContent = BOSS.name;
+    // Marcas donde empiezan las fases 2 y 3.
+    const track = el('bossTrack');
+    for (const f of BOSS.phaseThresholds) {
+      const mark = document.createElement('i');
+      mark.style.left = `${(f * 100).toFixed(1)}%`;
+      track.appendChild(mark);
+    }
   }
 
   private set(e: HTMLElement, text: string): void {
@@ -79,6 +109,20 @@ export class Hud {
   reset(): void {
     this.ghost = PLAYER.maxHp;
     this.hurtFlash = 0;
+    this.bossTitle.classList.remove('show');
+    this.setLock(false, 0, 0);
+    this.setSkipHint(false);
+  }
+
+  /** Marcador del objetivo fijado, en píxeles de pantalla. */
+  setLock(on: boolean, x: number, y: number): void {
+    this.lockMark.classList.toggle('on', on);
+    if (on)
+      this.lockMark.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(45deg)`;
+  }
+
+  setSkipHint(on: boolean): void {
+    this.skipHint.classList.toggle('hidden', !on);
   }
 
   /** Corre en tiempo real (el prototipo actualiza el HUD también en pausa). */
@@ -110,5 +154,18 @@ export class Hud {
     this.hurtFlash = Math.max(0, this.hurtFlash - realDt * HURT_FLASH_DECAY);
     this.setStyle(this.vig, 'opacity', this.hurtFlash.toFixed(3));
     this.lowhp.classList.toggle('on', p.hp > 0 && p.hp < PLAYER.lowHpThreshold);
+
+    const b = w.boss;
+    this.letterbox.classList.toggle('on', w.cinematic);
+    const showBoss = b.active && !w.cinematic;
+    this.bossBar.classList.toggle('hidden', !showBoss);
+    if (showBoss) {
+      const f = b.hpFraction;
+      this.bossGhostHp =
+        this.bossGhostHp > f ? Math.max(f, this.bossGhostHp - realDt * BOSS_GHOST_DRAIN) : f;
+      this.setStyle(this.bossFill, 'transform', `scaleX(${f.toFixed(4)})`);
+      this.setStyle(this.bossGhost, 'transform', `scaleX(${this.bossGhostHp.toFixed(4)})`);
+      this.bossBar.classList.toggle('broken', b.state === 'broken');
+    }
   }
 }

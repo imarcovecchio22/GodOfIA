@@ -85,6 +85,9 @@ export interface MixTuning {
   drumsVolume: number;
   /** Segundos para entrar o salir los tambores. */
   drumsFade: number;
+  /** Durante el jefe los tambores aceleran y suben. */
+  bossDrumsBpm: number;
+  bossDrumsVolume: number;
   ambientVolume: number;
   /** Mínimo de segundos entre gruñidos de carga (si atacan muchos a la vez). */
   growlCooldown: number;
@@ -96,6 +99,8 @@ export const MIX: MixTuning = {
   drumsBpm: 92,
   drumsVolume: 0.55,
   drumsFade: 2.5,
+  bossDrumsBpm: 124,
+  bossDrumsVolume: 0.8,
   ambientVolume: 0.6,
   growlCooldown: 0.35,
 };

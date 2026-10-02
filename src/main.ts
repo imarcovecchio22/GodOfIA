@@ -59,6 +59,15 @@ if (debugEnabled()) {
   overlay.set('rapier', assets.rapier.version());
 }
 
+// Atajo de desarrollo: F8 salta a la oleada del jefe (también en la preview con ?debug).
+if (import.meta.env.DEV || debugEnabled()) {
+  window.addEventListener('keydown', (ev) => {
+    if (ev.code !== 'F8') return;
+    ev.preventDefault();
+    game.devJumpToBoss();
+  });
+}
+
 if (import.meta.env.DEV) {
   void import('./dev/tuningPanel').then(({ createTuningPanel }) => {
     createTuningPanel(() => {

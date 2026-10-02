@@ -47,5 +47,50 @@ export function createSynthBank(a: AudioManager) {
       a.noise(0.08, 3000, 2, 0.3, 'bandpass');
     },
     dodge: () => a.noise(0.22, 300, 1.5, 0.18, 'bandpass', 900),
+
+    // ─── Jefe (fase 5): cada carga tiene su sonido, para reconocerla sin mirar. ───
+    roar() {
+      a.tone('sawtooth', 95, 42, 1.6, 0.34);
+      a.tone('square', 62, 38, 1.4, 0.12);
+      a.noise(1.5, 420, 0.8, 0.5, 'lowpass', 160);
+    },
+    /** Tajo: el hacha toma envión, un silbido grave que sube. */
+    windSweep: () => a.noise(0.8, 220, 3, 0.32, 'bandpass', 1300),
+    /** Martillazo: tono que sube y se tensa hasta el golpe. */
+    windHammer() {
+      a.tone('sawtooth', 48, 120, 1.0, 0.22);
+      a.noise(1.0, 1800, 6, 0.12, 'bandpass', 3800);
+    },
+    /** Embestida: resoplido y pisotón. */
+    windCharge() {
+      a.noise(0.5, 600, 1, 0.45, 'lowpass', 180);
+      a.tone('sine', 70, 40, 0.5, 0.5);
+    },
+    /** Garfio: cadena revoleada. */
+    windHook() {
+      a.noise(0.65, 3200, 9, 0.28, 'bandpass', 4200);
+      a.tone('triangle', 900, 1300, 0.65, 0.05);
+    },
+    /** Llamado de los ahogados: un lamento hueco. */
+    windSummon() {
+      a.tone('sine', 220, 110, 1.1, 0.2);
+      a.tone('sine', 233, 117, 1.1, 0.14);
+    },
+    /** Furia: un golpe de aire corto por cada hachazo. */
+    windFury: () => a.noise(0.45, 400, 3, 0.3, 'bandpass', 1800),
+    /** Juicio del lago: se agacha y salta. */
+    leap() {
+      a.noise(0.8, 300, 1, 0.5, 'lowpass', 1200);
+      a.tone('sine', 60, 180, 0.8, 0.3);
+    },
+    quake() {
+      a.noise(0.9, 400, 0.8, 1, 'lowpass', 60);
+      a.tone('sine', 70, 28, 0.9, 1);
+    },
+    ring: () => a.tone('sine', 140, 70, 0.6, 0.35),
+    broken() {
+      a.tone('square', 300, 90, 0.4, 0.18);
+      a.noise(0.4, 2000, 1, 0.5, 'highpass');
+    },
   };
 }

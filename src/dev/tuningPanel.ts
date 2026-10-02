@@ -1,6 +1,8 @@
 import GUI from 'lil-gui';
 import { HEAVY, LIGHT_COMBO, THROW, COMBAT } from '../data/attacks';
 import { AXE } from '../data/axe';
+import { BOSS, BOSS_ATTACKS, BREAK_FROM_AXE } from '../data/boss';
+import { BOSS_LOOK, CINEMATIC, DECALS, LOCK_ON } from '../data/bossView';
 import { CAMERA } from '../data/camera';
 import { BRUTE, DRAUGR, ENEMY } from '../data/enemies';
 import { ANIMATION, ENEMY_MODELS, PLAYER_MODEL } from '../data/models';
@@ -38,6 +40,15 @@ export function createTuningPanel(onPostFx: () => void): GUI {
   addAll(gui.addFolder('Draugr').close(), DRAUGR);
   addAll(gui.addFolder('Bruto').close(), BRUTE);
   addAll(gui.addFolder('Enemigos').close(), ENEMY);
+  const boss = gui.addFolder('Jefe').close();
+  addAll(boss.addFolder('General').close(), BOSS);
+  addAll(boss.addFolder('Quiebre del hacha').close(), BREAK_FROM_AXE);
+  for (const a of BOSS_ATTACKS) addAll(boss.addFolder(a.id).close(), a);
+  const bossView = boss.addFolder('Vista').close();
+  addAll(bossView.addFolder('Greybox').close(), BOSS_LOOK);
+  addAll(bossView.addFolder('Avisos').close(), DECALS);
+  addAll(bossView.addFolder('Fijación').close(), LOCK_ON);
+  addAll(bossView.addFolder('Cinemática').close(), CINEMATIC);
   addAll(gui.addFolder('Oleadas').close(), WAVES);
   addAll(gui.addFolder('Orbes').close(), ORBS);
   addAll(gui.addFolder('Combo').close(), COMBO);

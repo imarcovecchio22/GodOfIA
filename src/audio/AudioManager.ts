@@ -169,8 +169,12 @@ export class AudioManager {
     this.ambientSource = src;
   }
 
-  setDrums(on: boolean): void {
-    this.drums?.setLevel(on ? MIX.drumsVolume : 0, MIX.drumsFade);
+  /** Tambores de oleada; `boss` = la versión rápida de la pelea con el jefe. */
+  setDrums(on: boolean, boss = false): void {
+    const d = this.drums;
+    if (!d) return;
+    d.bpm = boss ? MIX.bossDrumsBpm : MIX.drumsBpm;
+    d.setLevel(on ? (boss ? MIX.bossDrumsVolume : MIX.drumsVolume) : 0, MIX.drumsFade);
   }
 
   // ─────────────────────── Sintetizado ───────────────────────

@@ -9,7 +9,14 @@ const KEY_ACTIONS: Partial<Record<string, PressAction>> = {
   KeyE: 'recall',
 };
 
-const PREVENT_DEFAULT = new Set(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
+const PREVENT_DEFAULT = new Set([
+  'Space',
+  'Tab',
+  'ArrowUp',
+  'ArrowDown',
+  'ArrowLeft',
+  'ArrowRight',
+]);
 
 /**
  * Teclado y mouse traducidos a acciones. El juego lee `PlayerInput` por paso de simulación,
@@ -19,8 +26,13 @@ const PREVENT_DEFAULT = new Set(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', '
 export class Input {
   /** Solo se registran acciones mientras se está jugando. */
   enabled = false;
-  /** Teclas que no son de gameplay (pausa, silencio); se reciben siempre. */
-  onKeyDown: ((code: string) => void) | null = null;
+  /**
+   * Teclas que no son de gameplay (pausa, silencio); se reciben siempre. Si devuelve true, la
+   * tecla queda consumida y no genera acción (por ejemplo, al saltear una cinemática).
+   */
+  onKeyDown: ((code: string) => boolean) | null = null;
+  /** Fijar o soltar objetivo (Tab o click del medio). */
+  onLockToggle: (() => void) | null = null;
 
   private readonly held = new Set<string>();
   private readonly pressed = new Set<PressAction>();
@@ -53,8 +65,9 @@ export class Input {
   private readonly keyDown = (ev: KeyboardEvent): void => {
     this.held.add(ev.code);
     if (PREVENT_DEFAULT.has(ev.code)) ev.preventDefault();
-    this.onKeyDown?.(ev.code);
+    if (this.onKeyDown?.(ev.code) === true) return;
     if (!this.enabled || ev.repeat) return;
+    if (ev.code === 'Tab') this.onLockToggle?.();
     const action = KEY_ACTIONS[ev.code];
     if (action) this.pressed.add(action);
   };
@@ -67,6 +80,11 @@ export class Input {
     if (!this.enabled) return;
     if (ev.button === 0) this.pressed.add('attack');
     else if (ev.button === 2) this.pressed.add('heavy');
+    else if (ev.button === 1) {
+      // Sin esto, el click del medio activa el autoscroll del navegador.
+      ev.preventDefault();
+      this.onLockToggle?.();
+    }
   };
 
   private readonly mouseMove = (ev: MouseEvent): void => {

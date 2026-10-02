@@ -18,7 +18,8 @@ export class WarDrums {
     private readonly ctx: AudioContext,
     destination: AudioNode,
     private readonly noise: AudioBuffer,
-    private readonly bpm: number,
+    /** Se puede cambiar en vivo: el patrón sigue desde la próxima corchea. */
+    public bpm: number,
   ) {
     this.out = ctx.createGain();
     this.out.gain.value = 0;
