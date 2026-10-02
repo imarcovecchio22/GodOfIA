@@ -14,10 +14,11 @@ Plan por fases completo en `BRIEF.md`. Acá van las notas pendientes y la deuda 
 
 ## Pendientes y deuda
 
-- **Jefe en greybox (fase 5).** La pelea ya es jugable con primitivas: falta tunearla jugando
-  (Nacho) y después ponerle modelo CC0, animaciones y la cinemática con modelo. Los valores que el
-  brief no da están marcados como `// propio` en `data/boss.ts`. Medido con el jefe y 4 draugr
-  invocados: ~111 draw calls (pico ~131 con las partículas de la muerte).
+- **Jefe (fase 5).** Modelo, animaciones y cinemáticas listos. Falta tunear la pelea jugando
+  (Nacho): los valores que el brief no da están marcados como `// propio` en `data/boss.ts`, y la
+  aceptación pide que alguien que juega por primera vez pierda al menos una vez. Medido con el jefe
+  y 4 draugr invocados: ~111 draw calls (pico ~131 con las partículas de la muerte). `jarl.glb`
+  suma 326 KB a la carga inicial.
 - **La grieta y el frío son decals por shader** (`render/DecalViews.ts`), sin textura: si con el
   modelo no alcanzan, probar una textura de grietas CC0.
 - **Fijación de objetivo** es solo de cámara: no cambia hacia dónde ataca el jugador. Evaluar con

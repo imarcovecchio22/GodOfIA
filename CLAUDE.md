@@ -62,6 +62,14 @@ daño, velocidades, hit-stop y shake se portan tal cual salvo que Nacho apruebe 
 - Audio (fase 4): `npm run audio` genera `src/assets/audio/*.mp3` (requiere ffmpeg). Se cargan en
   diferido con el primer click; hasta entonces suena el sintetizado. Mezcla y bancos en
   `data/audio.ts`; los eventos se traducen en `audio/AudioDirector.ts`.
+- Jefe (fase 5): `entities/Boss.ts` (FSM, quiebre, fases) con el moveset en `data/boss.ts`; los
+  valores que el brief no da están marcados `// propio`. Regla de oro: toda carga dura al menos
+  `BOSS.minWindup` en todas las fases (hay test). Los avisos en el piso (`game/Telegraphs`) y las
+  zonas de peligro (`game/Hazards`) son genéricos; los dibuja `render/DecalViews` con un shader que
+  usa la misma forma que `combat/areas.ts`. El modelo es `jarl.glb` (Skeleton Warrior de KayKit)
+  con piezas propias colgadas de los huesos en `render/BossView.ts`; clips y contactos en
+  `BOSS_MODEL` (`data/models.ts`). La fijación de objetivo (`render/TargetLock`) es solo de
+  cámara. `F8` (dev o `?debug`) salta a la oleada del jefe.
 - Ajustes del jugador en `ui/settings.ts` (localStorage `furia-settings`); ayudas de una sola vez en
   `ui/Tips.ts` (`furia-tips`).
 - Con `?debug`, `window.__furia` expone el juego (para la consola y las pruebas en navegador).
