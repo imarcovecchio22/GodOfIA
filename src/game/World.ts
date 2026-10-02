@@ -29,8 +29,6 @@ export class World {
   readonly boss: BossSim;
   readonly telegraphs = new Telegraphs();
   readonly hazards: Hazards;
-  /** Durante la cinemática del jefe el jugador no controla al personaje. */
-  cinematic = false;
 
   /** Yaw de la cámara: define hacia dónde es "adelante" para el movimiento y la mira. */
   camYaw = 0;
@@ -59,11 +57,15 @@ export class World {
     });
   }
 
+  /** Durante la entrada del jefe el jugador no controla al personaje. */
+  get cinematic(): boolean {
+    return this.boss.state === 'emerge';
+  }
+
   reset(): void {
     this.boss.reset();
     this.telegraphs.clear();
     this.hazards.clear();
-    this.cinematic = false;
     this.enemies.clear();
     this.orbs.clear();
     this.player.reset();

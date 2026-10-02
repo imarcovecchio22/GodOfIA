@@ -223,6 +223,11 @@ export class BossSim {
     this.world.events.emit('boss:intro', { appearance });
   }
 
+  /** Saltea la entrada (desde la segunda vez que se ve). */
+  skipIntro(): void {
+    if (this.fsm.is('emerge')) this.fsm.go('idle', this);
+  }
+
   /** Para reiniciar la partida. */
   reset(): void {
     this.hideTelegraph();
@@ -302,7 +307,10 @@ export class BossSim {
     if (this.sinceHit > BOSS.breakDecayDelay && !this.fsm.is('broken')) {
       this.breakMeter = Math.max(0, this.breakMeter - BOSS.breakDecayRate * dt);
     }
-    for (const [id, cd] of this.cooldowns) this.cooldowns.set(id, cd - dt);
+    for (const a of BOSS_ATTACKS) {
+      const cd = this.cooldowns.get(a.id);
+      if (cd !== undefined && cd > 0) this.cooldowns.set(a.id, cd - dt);
+    }
     if (this.phase === 3) this.judgmentTimer -= dt;
     this.slowTimer = Math.max(0, this.slowTimer - dt);
     // El hacha lo ralentiza: todo su tiempo (cargas incluidas) corre más lento.
@@ -449,6 +457,7 @@ export class BossSim {
     const w = this.world;
     if (!strike) return;
     this.chargeStart.copy(this.pos);
+    w.feedback.shake(strike.shake);
     w.events.emit('boss:strike', {
       attack: this.attack?.id ?? 'sweep',
       x: this.aimX,
@@ -573,6 +582,7 @@ export class BossSim {
     if (this.world.collision.castSolid(dir, tmp) >= 0) {
       this.finishAttack();
       this.fsm.go('stunned', this);
+      this.world.feedback.shake(BOSS.stunShake);
       this.world.events.emit('boss:stunned', { x: tmp.x, z: tmp.z });
     } else {
       this.fsm.go('recover', this);
@@ -688,6 +698,7 @@ export class BossSim {
       });
     }
     this.judgmentTimer = J.interval;
+    w.feedback.shake(J.landShake);
     w.events.emit('boss:landed', { x: CENTER.x, z: CENTER.z });
   }
 

@@ -25,6 +25,8 @@ export interface BossStrike {
   knockback: number;
   /** Avance del jefe durante la ventana activa (u). */
   lunge: number;
+  /** Temblor de cámara al soltar el golpe (propio). */
+  shake: number;
 }
 
 export interface BossAttackDef {
@@ -50,6 +52,7 @@ const sweepStrike = (windup: number): BossStrike => ({
   damage: 25,
   knockback: 12,
   lunge: 0.6,
+  shake: 0.25,
 });
 
 const furyStrike = (windup: number, recover: number): BossStrike => ({
@@ -62,6 +65,7 @@ const furyStrike = (windup: number, recover: number): BossStrike => ({
   damage: 20, // propio
   knockback: 9,
   lunge: 1.5,
+  shake: 0.2,
 });
 
 export const BOSS_ATTACKS: BossAttackDef[] = [
@@ -90,6 +94,7 @@ export const BOSS_ATTACKS: BossAttackDef[] = [
         damage: 35,
         knockback: 14,
         lunge: 0,
+        shake: 0.55,
       },
     ],
   },
@@ -111,6 +116,7 @@ export const BOSS_ATTACKS: BossAttackDef[] = [
         damage: 30,
         knockback: 16,
         lunge: 12,
+        shake: 0.3,
       },
     ],
   },
@@ -132,6 +138,7 @@ export const BOSS_ATTACKS: BossAttackDef[] = [
         damage: 0,
         knockback: 0,
         lunge: 0,
+        shake: 0.15,
       },
     ],
   },
@@ -153,6 +160,7 @@ export const BOSS_ATTACKS: BossAttackDef[] = [
         damage: 0,
         knockback: 0,
         lunge: 0,
+        shake: 0.15,
       },
     ],
   },
@@ -208,6 +216,8 @@ export interface BossTuning {
   axeSlowDuration: number;
   /** Aturdido al chocar una columna en la embestida. */
   stunnedDuration: number;
+  /** Temblor al chocar la columna (propio). */
+  stunShake: number;
   charge: { speed: number };
   hook: { pullDuration: number; pullDistance: number };
   summon: { count: number };
@@ -222,6 +232,7 @@ export interface BossTuning {
     landRadius: number; // propio
     landDamage: number; // propio
     landKnockback: number; // propio
+    landShake: number; // propio
     rings: number;
     ringSpacing: number; // propio
     ringSpeed: number; // propio
@@ -263,6 +274,7 @@ export const BOSS: BossTuning = {
   axeSlow: 0.4,
   axeSlowDuration: 1.5,
   stunnedDuration: 2,
+  stunShake: 0.6,
   charge: { speed: 24 },
   hook: { pullDuration: 0.35, pullDistance: 2.6 },
   summon: { count: 4 },
@@ -276,6 +288,7 @@ export const BOSS: BossTuning = {
     landRadius: 4,
     landDamage: 30,
     landKnockback: 14,
+    landShake: 0.8,
     rings: 3,
     ringSpacing: 0.9,
     ringSpeed: 14,
